@@ -12,15 +12,35 @@ namespace engine {
 
 namespace lt = libtorrent;
 
-Engine::Engine() {
-    session_ = std::make_unique<lt::session>();
-}
+Engine::Engine() {}
 
 Engine::~Engine() {
     LOG << "P2P Engine exit!";
 }
 
 // ----- Public API -----
+
+// static
+std::shared_ptr<Engine> Engine::Create() {
+    return std::make_shared<Engine>();
+}
+
+void Engine::Startup() {
+    // 
+    auto settings = lt::default_settings();
+    settings.set_str(
+        lt::settings_pack::user_agent, "p2pd/0.1.0"
+    );
+    // Create session
+    session_ = new lt::session(
+        std::move(settings)
+    );
+    session_->add_extension(shared_from_this());
+}
+
+void Engine::Shutdown() {
+    delete session_;
+}
 
 void Engine::AddObserver(Observer * observer) {
     observers_.push_back(observer);

@@ -32,7 +32,8 @@ int Daemon::Run() {
     }
 
     // Create engine
-    auto engine = std::make_shared<engine::Engine>();
+    auto engine = engine::Engine::Create();
+    engine->Startup();
     // Start server
     auto server = websocket::create_server(engine, io_ctx_);
     server->Startup(9066);
@@ -41,9 +42,10 @@ int Daemon::Run() {
     std::mutex mutex;
     std::unique_lock<std::mutex> lock{mutex};
     cond_.wait(lock);
-    LOG << "Receive exit signal, shutting down server ...";
+    LOG << "Receive exit signal, shutting down daemon ...";
 
     server->Shutdown();
+    engine->Shutdown();
     io_ctx_.stop();
     return 0;
 }

@@ -9,17 +9,14 @@
 
 namespace p2pd {
 
-// namespace shortcut
-namespace asio = boost::asio;
-// type shortcut
-using error_code = boost::system::error_code;
-
 class Daemon {
+
+using error_code = boost::system::error_code;
 
 private:
     size_t pool_size_;
-    asio::io_context io_ctx_;
-    asio::signal_set signals_;
+    boost::asio::io_context io_ctx_;
+    boost::asio::signal_set signals_;
     std::condition_variable cond_{};
 
 public:
@@ -30,7 +27,7 @@ public:
 private:
     void PrintBanner();
     void AsyncWaitSignal();
-    void OnSignal(const error_code& ec, int signal);
+    void OnSignal(error_code const& ec, int signal);
 
 };
 
