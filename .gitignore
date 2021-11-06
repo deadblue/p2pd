@@ -1,0 +1,6 @@
+# Project config
+.vscode
+# Test code
+.test
+# Platform config
+cmake/platform
