@@ -1,6 +1,7 @@
 #include "websocket/server.h"
 
 #include <boost/beast.hpp>
+#include <mutex>
 
 #include "api/request.h"
 #include "api/response.h"
@@ -12,10 +13,13 @@ namespace websocket {
 
 Server::Server(
     std::shared_ptr<p2pd::engine::Engine> engine,
-    boost::asio::io_context & io_ctx
-) : BaseServer(engine, io_ctx), 
-    acceptor_(io_ctx) {
-    engine->AddObserver(this);
+    io_context & io_ctx
+) : engine_(engine), 
+    io_ctx_(io_ctx),
+    acceptor_(io_ctx) {}
+
+Server::~Server() {
+    LOG << "Websocket API server closed!";
 }
 
 // ----- Override |p2pd::BasicServer| -----
@@ -61,16 +65,16 @@ void Server::Shutdown() {
 // ----- Override |p2pd::websocket::SessionHost| -----
 
 void Server::OnSessionMessage(
-        std::shared_ptr<Session> session, std::string message
+    Session * session, std::string message
 ) {
     // Parse incoming message as request 
     api::GenericRequest request;
     json::ParseAs(message, request);
 
+    // TODO: Handle request
     LOG << "Request id=" << request.id
         << ", action=" << request.action;
-    
-    // Sending response
+    // TODO: Sending response
     api::GenericResponse response;
     response.id = request.id;
     response.action = request.action;
@@ -79,13 +83,18 @@ void Server::OnSessionMessage(
     session->SendMessage(result);
 }
 
-void Server::OnSessionClose(std::shared_ptr<Session> session) {
-    LOG << "Session closed, id=" << session->id();
-    sessions_.erase(session->id());
+void Server::OnSessionClose(Session * session) {
+    auto session_id = session->id();
+    LOG << "Session closed, id=" << session_id;
+    sessions_.erase(session_id);
     cond_.notify_all();
 }
 
 // ----- Override |p2pd::engine::Observer| -----
+
+void Server::OnAlert(std::string const& alert_message) {
+
+}
 
 void Server::OnTaskAdd() {
 
@@ -113,13 +122,27 @@ void Server::OnAccepted(error_code const& ec, socket_type socket) {
         }
     } else {
         // Create session
-        auto session = std::make_shared<Session>(
-            std::move(socket), this, io_ctx_);
-        sessions_[session->id()] = session;
+        auto session = std::make_unique<Session>(
+            std::move(socket), this, io_ctx_
+        );
+        auto session_id = session->id();
         session->Open();
+        // Store session.
+        sessions_[session_id] = std::move(session);
         // Accept next connection
         DoAccept();
     }
+}
+
+std::unique_ptr<Server> create_server(
+    std::shared_ptr<p2pd::engine::Engine> engine, 
+    io_context & io_ctx
+) {
+    auto server = std::make_unique<Server>(
+        engine, io_ctx
+    );
+    engine->AddObserver(server.get());
+    return server;
 }
 
 } // namespace websocket

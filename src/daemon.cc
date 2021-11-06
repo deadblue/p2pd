@@ -13,17 +13,6 @@
 
 namespace p2pd {
 
-void print_banner() {
-    const char * banner = "\n"
-        R"(            ___             __  )" "\n"
-        R"(      ____ |__ \ ____  ____/ /  )" "\n"
-        R"(     / __ \__/ // __ \/ __  /   )" "\n"
-        R"(    / /_/ / __// /_/ / /_/ /    )" "\n"
-        R"(   / .___/____/ .___/\__,_/     )" "\n"
-        R"(  /_/        /_/                )" "\n";
-    std::cout << banner << std::endl;
-}
-
 Daemon::Daemon(
     size_t pool_size
 ) : pool_size_(pool_size), 
@@ -31,23 +20,21 @@ Daemon::Daemon(
     signals_(io_ctx_, SIGINT, SIGTERM) {}
 
 int Daemon::Run() {
-    print_banner();
+    PrintBanner();
     // Register signal handler
     AsyncWaitSignal();
     // Start thread pool
     LOG << "Starting workers, num=" << pool_size_;
     for(int i = 0; i < pool_size_; ++i) {
-        std::thread(std::bind(
-            &Daemon::Worker, this
-        )).detach();
+        std::thread([this]{
+            io_ctx_.run();
+        }).detach();
     }
 
-    // Start engine
+    // Create engine
     auto engine = std::make_shared<engine::Engine>();
     // Start server
-    auto server = std::make_unique<websocket::Server>(
-        engine, io_ctx_
-    );
+    auto server = websocket::create_server(engine, io_ctx_);
     server->Startup(9066);
     LOG << "Server listening at :9066 ...";
 
@@ -58,14 +45,20 @@ int Daemon::Run() {
 
     server->Shutdown();
     io_ctx_.stop();
-    LOG << "Bye-bye!";
     return 0;
 }
 
-void Daemon::Worker() {
-    LOG << "Worker thread starting, id=" << std::this_thread::get_id();
-    io_ctx_.run();
-    LOG << "Worker thread exited, id=" << std::this_thread::get_id();
+// ----- Private methods -----
+
+void Daemon::PrintBanner() {
+    const char * banner = "\n"
+        R"(            ___             __  )" "\n"
+        R"(      ____ |__ \ ____  ____/ /  )" "\n"
+        R"(     / __ \__/ // __ \/ __  /   )" "\n"
+        R"(    / /_/ / __// /_/ / /_/ /    )" "\n"
+        R"(   / .___/____/ .___/\__,_/     )" "\n"
+        R"(  /_/        /_/                )" "\n";
+    std::cout << banner << std::endl;
 }
 
 void Daemon::AsyncWaitSignal() {

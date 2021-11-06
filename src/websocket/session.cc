@@ -40,7 +40,7 @@ Session::~Session() {
 void Session::Open() {
     // Perform server-side handshake
     stream_.async_accept(asio::bind_executor(r_strand_, std::bind(
-        &Session::OnOpened, shared_from_this(), std::placeholders::_1
+        &Session::OnOpened, this, std::placeholders::_1
     )));
 }
 
@@ -48,7 +48,7 @@ void Session::Close() {
     // Send close message
     auto reason = ws::close_reason(ws::close_code::normal);
     stream_.async_close(reason, asio::bind_executor(w_strand_, std::bind(
-        &Session::OnClosed, shared_from_this(), std::placeholders::_1
+        &Session::OnClosed, this, std::placeholders::_1
     )));
 }
 
@@ -64,7 +64,7 @@ void Session::SendMessage(std::string const& message) {
     }
     // Enqueueu writing task
     asio::post(w_strand_, std::bind(&Session::DoWrite, 
-        shared_from_this(), data_size
+        this, data_size
     ));
 }
 
@@ -78,12 +78,12 @@ void Session::OnClosed(error_code const& ec) {
     } else {
         LOG << "Closing session ...";
     }
-    host_->OnSessionClose(shared_from_this());
+    host_->OnSessionClose(this);
 }
 
 void Session::AsyncRead() {
     stream_.async_read(r_buf_, asio::bind_executor(r_strand_, std::bind(
-        &Session::OnRead, shared_from_this(),
+        &Session::OnRead, this,
         std::placeholders::_1, std::placeholders::_2
     )));
 }
@@ -100,7 +100,7 @@ void Session::OnRead(error_code const& ec, size_t transferred_size) {
     // Handle incoming message
     if(stream_.got_text()) {
         auto message = boost::beast::buffers_to_string(r_buf_.data());
-        host_->OnSessionMessage(shared_from_this(), message);
+        host_->OnSessionMessage(this, message);
     }
     r_buf_.consume(transferred_size);
     // Read next message

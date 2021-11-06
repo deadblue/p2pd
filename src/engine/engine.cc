@@ -17,12 +17,14 @@ Engine::Engine() {
 }
 
 Engine::~Engine() {
-    LOG << "Engine exit!";
+    LOG << "P2P Engine exit!";
 }
 
 // ----- Public API -----
 
-void Engine::AddObserver(Observer * observer) {}
+void Engine::AddObserver(Observer * observer) {
+    observers_.push_back(observer);
+}
 
 void Engine::AddTorrent(const unsigned char * data, size_t data_size) {
     auto params = lt::add_torrent_params{};
@@ -61,9 +63,12 @@ std::shared_ptr<lt::torrent_plugin> Engine::new_torrent(
 void Engine::on_alert(lt::alert const* alert) {
     LOG << "Alert: " << alert->message();
     // TODO: Send alert to client.
+    for(auto const& observer : observers_) {
+        observer->OnAlert(alert->message());
+    }
 }
 
-// ----- Override |libtorrent::torrent_plugin| -----
+// ----- Override |libtorrent::TaskHost| -----
 
 void Engine::OnTaskStateChanged(uint32_t task_id, int state) {
     // TODO: Send torrent state to client.

@@ -15,14 +15,13 @@ namespace engine {
 
 namespace lt = libtorrent;
 
-class Engine
-    : public std::enable_shared_from_this<Engine>, 
-      public lt::plugin,
-      public TaskHost {
+class Engine :  public std::enable_shared_from_this<Engine>, 
+                public lt::plugin,
+                public TaskHost {
 
 private:
     std::unique_ptr<lt::session> session_;
-    std::vector<Observer*> observers_{};
+    std::vector<Observer *> observers_{};
 
 public:
     Engine();

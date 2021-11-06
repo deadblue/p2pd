@@ -2,7 +2,6 @@
 #define P2PD_WEBSOCKET_SESSION_H
 
 #include <atomic>
-#include <memory>
 #include <queue>
 #include <string>
 
@@ -30,30 +29,23 @@ using buffer_type   = boost::beast::multi_buffer;
 /**
  * @brief Session holds a connection from client.
  * 
- * @author deadblue
+ * @author Tomo Kunagisa
  */
-class Session : public std::enable_shared_from_this<Session> {
+class Session {
 
 private:
-
     // Session ID.
     std::string id_;
-    
     // Websocket stream
     stream_type stream_;
-
     // Pointer to session host.
     SessionHost * host_;
-
     // Executor for reading operations
     strand_type r_strand_;
-    
     // Executor for writing operations
     strand_type w_strand_;
-    
     // Buffer for reading.
     buffer_type r_buf_{};
-    
     // Buffer for writing
     buffer_type w_buf_{};
 
