@@ -20,6 +20,7 @@ Daemon::Daemon(
     signals_(io_ctx_, SIGINT, SIGTERM) {}
 
 int Daemon::Run() {
+    // Print banner
     PrintBanner();
     // Register signal handler
     AsyncWaitSignal();
@@ -70,10 +71,14 @@ void Daemon::AsyncWaitSignal() {
 }
 
 void Daemon::OnSignal(const error_code& ec, int signal) {
-    if(SIGINT == signal) {
+    switch (signal) {
+    case SIGINT: 
+    case SIGTERM:
         cond_.notify_one();
-    } else {
+        break;
+    default:
         AsyncWaitSignal();
+        break;
     }
 }
 
