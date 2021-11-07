@@ -53,7 +53,7 @@ public:
 
     // Override |TaskHost|
     void OnTaskStateChanged(
-        uint32_t torrent_id, int state
+        uint32_t torrent_id, task_state state
     ) final;
 
 };

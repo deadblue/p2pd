@@ -1,18 +1,9 @@
 cmake_minimum_required(VERSION 3.13)
 
-project(p2pd
-    VERSION 1.0.0
-    LANGUAGES CXX
-)
-
-#message(STATUS "Build target: ${TARGET_PLATFORM}")
-# if(${TARGET_PLATFORM} STREQUAL RK)
-#     include(cmake/platform/rk.cmake)
-# endif()
+project(p2pd)
 
 # --- main application ---
 
-set(target_name p2pd)
 aux_source_directory(src SRC_FILES)
 aux_source_directory(src/api SRC_FILES)
 aux_source_directory(src/common SRC_FILES)

@@ -19,8 +19,12 @@ private:
     std::shared_ptr<TaskHost> host_;
 
 public:
+    // Constructor
     TaskPlugin(uint32_t id, std::shared_ptr<TaskHost> host);
-    // |libtorrent::torrent_plugin| implementation
+
+    // Override |libtorrent::torrent_plugin|
+    bool on_pause();
+    bool on_resume();
     void on_state(lt::torrent_status::state_t state);
 
 };

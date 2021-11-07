@@ -18,10 +18,9 @@ namespace json {
         BINDINGS                                        \
     }
 
-DEFINE_UNMARSHALLER(api::GenericRequest,
-    FIELD_BINDING(version)
+DEFINE_UNMARSHALLER(api::Request,
     FIELD_BINDING(id)
-    FIELD_BINDING(action)
+    FIELD_BINDING(method)
     FIELD_BINDING(params)
 )
 

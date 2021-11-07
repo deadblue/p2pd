@@ -1,6 +1,7 @@
 #ifndef P2PD_API_RESPONSE_H
 #define P2PD_API_RESPONSE_H
 
+#include <cstdint>
 #include <string>
 
 #include "json/node.h"
@@ -8,10 +9,9 @@
 namespace p2pd {
 namespace api {
 
-struct GenericResponse {
+struct Response {
     std::string id;
-    std::string action;
-    bool error = false;
+    int error = 0;
     json::Node result;
 };
 

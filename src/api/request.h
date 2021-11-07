@@ -8,10 +8,9 @@
 namespace p2pd {
 namespace api {
 
-struct GenericRequest {
-    int version;
+struct Request {
     std::string id;
-    std::string action;
+    std::string method;
     json::Node params;
 };
 

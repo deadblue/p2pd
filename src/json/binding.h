@@ -18,6 +18,10 @@ template<typename T>
 Node& operator<<(Node && to, T const& from);
 template<typename T>
 Node& operator<<(Node && to, T && from);
+template<typename T>
+void operator<<(Node & to, T const& from);
+template<typename T>
+void operator<<(Node & to, T && from);
 
 #define DECLARE_CONVERTOR(VALUE_TYPE)                       \
     void operator>>(Node const& from, VALUE_TYPE & to);     \

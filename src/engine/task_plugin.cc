@@ -7,9 +7,18 @@ TaskPlugin::TaskPlugin(
     uint32_t id, std::shared_ptr<TaskHost> host
 ) : id_(id), host_(host) {}
 
+bool TaskPlugin::on_pause() {
+    return true;
+}
+
+bool TaskPlugin::on_resume() {
+    return true;
+}
+
 void TaskPlugin::on_state(lt::torrent_status::state_t state) {
     if(!host_) { return; }
-    host_->OnTaskStateChanged(id_, static_cast<int>(state));
+    // Forward state to host
+    host_->OnTaskStateChanged(id_, state);
 }
 
 } // namespace engine

@@ -65,14 +65,25 @@ public:
             Session * session, std::string message) final;
     void OnSessionClose(
             Session * session) final;
+
     // Override |p2pd::engine::Observer|
-    void OnAlert(std::string const& alert_message) final;
-    void OnTaskAdd() final;
-    void OnTaskStateChanged(uint32_t task_id) final;
+    void OnEngineAlert(std::string const& alert_message) final;
+    void OnTaskStateChanged(
+        uint32_t task_id, engine::TaskState state
+    ) final;
 
 private:
     void DoAccept();
     void OnAccepted(error_code const& ec, socket_type socket);
+
+    /**
+     * @brief Publish event to all sessions.
+     * 
+     * @param name Event name.
+     * @param data Event data.
+     */
+    template<typename T>
+    void PublishEvent(std::string const& name, T && data);
 };
 
 std::unique_ptr<Server> create_server(

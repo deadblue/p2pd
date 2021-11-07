@@ -6,6 +6,7 @@
 #include "common/logging.h"
 #include "engine/settings.h"
 #include "engine/task_plugin.h"
+#include "version.h"
 
 namespace p2pd {
 namespace engine {
@@ -29,7 +30,7 @@ void Engine::Startup() {
     // 
     auto settings = lt::default_settings();
     settings.set_str(
-        lt::settings_pack::user_agent, "p2pd/0.1.0"
+        lt::settings_pack::user_agent, "p2pd/" P2PD_VERSION
     );
     // Create session
     session_ = new lt::session(
@@ -82,16 +83,36 @@ std::shared_ptr<lt::torrent_plugin> Engine::new_torrent(
 
 void Engine::on_alert(lt::alert const* alert) {
     LOG << "Alert: " << alert->message();
-    // TODO: Send alert to client.
     for(auto const& observer : observers_) {
-        observer->OnAlert(alert->message());
+        observer->OnEngineAlert(alert->message());
     }
 }
 
 // ----- Override |libtorrent::TaskHost| -----
 
-void Engine::OnTaskStateChanged(uint32_t task_id, int state) {
-    // TODO: Send torrent state to client.
+void Engine::OnTaskStateChanged(uint32_t task_id, task_state task_state) {
+    TaskState state;
+    switch (task_state) {
+    case lt::torrent_status::state_t::checking_files:
+    case lt::torrent_status::state_t::checking_resume_data:
+    case lt::torrent_status::state_t::downloading_metadata:
+        state = TaskState::preparing;
+        break;
+    case lt::torrent_status::state_t::downloading:
+        state = TaskState::downloading;
+        break;
+    case lt::torrent_status::state_t::seeding:
+        state = TaskState::seeding;
+        break;
+    case lt::torrent_status::state_t::finished:
+        state = TaskState::finished;
+        break;
+    default:
+        break;
+    }
+    for(auto const& observer : observers_) {
+        observer->OnTaskStateChanged(task_id, state);
+    }
 }
 
 } // namespace engine

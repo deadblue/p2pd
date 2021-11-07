@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <string>
 
+#include "engine/type.h"
+
 namespace p2pd {
 namespace engine {
 
@@ -11,12 +13,19 @@ namespace engine {
  * Observer can receive download events from engine.
  */
 class Observer{
+
 public:
-    virtual void OnAlert(std::string const& message) {}
+    /**
+     * Fired when engine dispatch an alert.
+     */
+    virtual void OnEngineAlert(std::string const& message) {}
 
-    virtual void OnTaskAdd() {}
+    /**
+     * Fired when state of a task is changed.
+     */
+    virtual void OnTaskStateChanged(uint32_t task_id, TaskState state) {}
 
-    virtual void OnTaskStateChanged(uint32_t task_id) {}
+    // TODO: Declare more observer methods.
     
 };
 

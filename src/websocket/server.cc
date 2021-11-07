@@ -1,10 +1,13 @@
 #include "websocket/server.h"
 
 #include <boost/beast.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 #include <mutex>
 
 #include "api/request.h"
 #include "api/response.h"
+#include "api/event.h"
 #include "common/logging.h"
 #include "json/binding.h"
 
@@ -68,16 +71,15 @@ void Server::OnSessionMessage(
     Session * session, std::string message
 ) {
     // Parse incoming message as request 
-    api::GenericRequest request;
+    api::Request request;
     json::ParseAs(message, request);
-
     // TODO: Handle request
     LOG << "Request id=" << request.id
-        << ", action=" << request.action;
+        << ", method=" << request.method;
+
     // TODO: Sending response
-    api::GenericResponse response;
+    api::Response response;
     response.id = request.id;
-    response.action = request.action;
     response.error = false;
     auto result = json::ToString(response);
     session->SendMessage(result);
@@ -92,16 +94,14 @@ void Server::OnSessionClose(Session * session) {
 
 // ----- Override |p2pd::engine::Observer| -----
 
-void Server::OnAlert(std::string const& alert_message) {
-
+void Server::OnEngineAlert(std::string const& alert_message) {
+    auto alert = api::event::EngineAlert();
+    alert.message = alert_message;
+    PublishEvent("engine.alert", std::move(alert));
 }
 
-void Server::OnTaskAdd() {
-
-}
-
-void Server::OnTaskStateChanged(uint32_t task_id) {
-
+void Server::OnTaskStateChanged(uint32_t task_id, engine::TaskState state) {
+    // TODO: Publish event to client.
 }
 
 // ----- private methods -----
@@ -131,6 +131,20 @@ void Server::OnAccepted(error_code const& ec, socket_type socket) {
         sessions_[session_id] = std::move(session);
         // Accept next connection
         DoAccept();
+    }
+}
+
+template<typename T>
+void Server::PublishEvent(std::string const& name, T && data) {
+    // Make event message
+    auto event = api::Event(name);
+    boost::uuids::random_generator gen;
+    event.id = boost::uuids::to_string(gen());
+    event.data << std::move(data);
+    auto message = json::ToString(std::move(event));
+    // Publish to all sessions
+    for (auto it = sessions_.begin(); it != sessions_.end(); ++it) {
+        it->second->SendMessage(message);
     }
 }
 
