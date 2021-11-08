@@ -74,7 +74,7 @@ lt::feature_flags_t Engine::implemented_features() {
 }
 
 std::shared_ptr<lt::torrent_plugin> Engine::new_torrent(
-    lt::torrent_handle const& th, void * user_data
+    lt::torrent_handle const& th, client_data_type user_data
 ) {
     return std::make_shared<TaskPlugin>(
         th.id(), shared_from_this()

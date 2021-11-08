@@ -4,8 +4,9 @@
 #include <memory>
 #include <vector>
 
-#include <libtorrent/session.hpp>
 #include <libtorrent/extensions.hpp>
+#include <libtorrent/session.hpp>
+#include <libtorrent/version.hpp>
 
 #include "engine/task_host.h"
 #include "engine/observer.h"
@@ -28,6 +29,12 @@ private:
     lt::session * session_;
     std::vector<Observer *> observers_{};
 
+#if LIBTORRENT_VERSION_MAJOR > 1
+    using client_data_type = lt::client_data_t;
+#else
+    using client_data_type = void *;
+#endif
+
 public:
     // Constructor
     Engine();
@@ -47,7 +54,7 @@ public:
     lt::feature_flags_t implemented_features() final;
     std::shared_ptr<lt::torrent_plugin> new_torrent(
         lt::torrent_handle const& handle, 
-        void * client_data
+        client_data_type client_data
     ) final;
     void on_alert(lt::alert const* alert) final;
 
