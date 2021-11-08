@@ -8,25 +8,33 @@
 namespace p2pd {
 namespace json {
 
-// Unmarshal operators
+// ----- Unmarshal operators -----
 template<typename T>
 void operator>>(Node const& from, T & to);
 template<typename T>
 void operator>>(Node && from, T & to);
-// Marshal operators
 template<typename T>
-Node& operator<<(Node && to, T const& from);
+T& operator>>(Node const& from, T && to);
 template<typename T>
-Node& operator<<(Node && to, T && from);
+T& operator>>(Node && from, T && to);
+// ----- Marshal operators -----
 template<typename T>
 void operator<<(Node & to, T const& from);
 template<typename T>
 void operator<<(Node & to, T && from);
+template<typename T>
+Node& operator<<(Node && to, T const& from);
+template<typename T>
+Node& operator<<(Node && to, T && from);
 
-#define DECLARE_CONVERTOR(VALUE_TYPE)                       \
-    void operator>>(Node const& from, VALUE_TYPE & to);     \
-    void operator>>(Node && from, VALUE_TYPE & to);         \
-    Node& operator<<(Node && to, VALUE_TYPE const& from);   \
+#define DECLARE_CONVERTOR(VALUE_TYPE)                           \
+    void operator>>(Node const& from, VALUE_TYPE & to);         \
+    void operator>>(Node && from, VALUE_TYPE & to);             \
+    VALUE_TYPE& operator>>(Node const& from, VALUE_TYPE && to); \
+    VALUE_TYPE& operator>>(Node && from, VALUE_TYPE && to);     \
+    void operator<<(Node & to, VALUE_TYPE const& from);         \
+    void operator<<(Node & to, VALUE_TYPE && from);             \
+    Node& operator<<(Node && to, VALUE_TYPE const& from);       \
     Node& operator<<(Node && to, VALUE_TYPE && from);
 
 DECLARE_CONVERTOR(Node)

@@ -9,7 +9,7 @@
 #include "api/response.h"
 #include "api/event.h"
 #include "common/logging.h"
-#include "json/binding.h"
+#include "json/io.h"
 
 namespace p2pd {
 namespace websocket {
