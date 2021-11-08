@@ -25,7 +25,7 @@ struct EngineAlert {
 };
 
 struct TaskStateChanged {
-    uint32_t task_id;
+    uint64_t task_id;
     int state;
 };
 

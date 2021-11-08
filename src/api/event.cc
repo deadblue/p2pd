@@ -7,24 +7,24 @@ namespace json {
 #define FIELD_BINDING(FIELD_NAME)   \
     to.AddChild(#FIELD_NAME, from.FIELD_NAME);
 
-#define DEFINE_MARSHALLER(TYPE_NAME, BINDINGS)              \
-    template<>                                              \
-    Node& operator<<(Node && to, TYPE_NAME const& from) {   \
-        BINDINGS                                            \
-        return to;                                          \
-    }                                                       \
-    template<>                                              \
-    Node& operator<<(Node && to, TYPE_NAME && from) {       \
-        BINDINGS                                            \
-        return to;                                          \
-    }                                                       \
-    template<>                                              \
-    void operator<<(Node & to, TYPE_NAME const& from) {     \
-        BINDINGS                                            \
-    }                                                       \
-    template<>                                              \
-    void operator<<(Node & to, TYPE_NAME && from) {         \
-        BINDINGS                                            \
+#define DEFINE_MARSHALLER(TYPE_NAME, BINDINGS)                          \
+    template<>                                                          \
+    void operator<<<TYPE_NAME>(Node & to, TYPE_NAME const& from) {      \
+        BINDINGS                                                        \
+    }                                                                   \
+    template<>                                                          \
+    void operator<<<TYPE_NAME>(Node & to, TYPE_NAME && from) {          \
+        BINDINGS                                                        \
+    }                                                                   \
+    template<>                                                          \
+    Node& operator<<<TYPE_NAME>(Node && to, TYPE_NAME const& from) {    \
+        BINDINGS                                                        \
+        return to;                                                      \
+    }                                                                   \
+    template<>                                                          \
+    Node& operator<<<TYPE_NAME>(Node && to, TYPE_NAME && from) {        \
+        BINDINGS                                                        \
+        return to;                                                      \
     }
 
 DEFINE_MARSHALLER(api::Event,
