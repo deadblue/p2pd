@@ -1,5 +1,5 @@
-#ifndef P2PD_WEBSOCKET_SESSION_H
-#define P2PD_WEBSOCKET_SESSION_H
+#ifndef P2PD_API_SERVER_SESSION_H
+#define P2PD_API_SERVER_SESSION_H
 
 #include <atomic>
 #include <queue>
@@ -9,37 +9,36 @@
 #include <boost/beast.hpp>
 #include <boost/system/error_code.hpp>
 
-#include "websocket/session_host.h"
+#include "api/server_session_host.h"
 
 namespace p2pd {
-namespace websocket {
+namespace api {
 
 // namespace shortcut
 namespace asio = boost::asio;
 namespace ws = boost::beast::websocket;
-// type shortcut
-using error_code    = boost::system::error_code;
-using io_context    = asio::io_context;
-using strand_type   = asio::io_context::strand;
-using socket_type   = asio::ip::tcp::socket;
-using endpoint_type = asio::ip::tcp::endpoint;
-using stream_type   = ws::stream<socket_type>;
-using buffer_type   = boost::beast::multi_buffer;
 
 /**
- * @brief Session holds a connection from client.
+ * @brief ServerSession holds a connection which initiated from client.
  * 
- * @author Tomo Kunagisa
+ * @author deadblue
  */
-class Session {
+class ServerSession {
 
 private:
+    using error_code  = boost::system::error_code;
+    using io_context  = asio::io_context;
+    using strand_type = asio::io_context::strand;
+    using socket_type = asio::ip::tcp::socket;
+    using stream_type = ws::stream<socket_type>;
+    using buffer_type = boost::beast::multi_buffer;
+
     // Session ID.
-    std::string id_;
+    session_id id_;
     // Websocket stream
     stream_type stream_;
     // Pointer to session host.
-    SessionHost * host_;
+    ServerSessionHost * host_;
     // Executor for reading operations
     strand_type r_strand_;
     // Executor for writing operations
@@ -51,11 +50,12 @@ private:
 
 public:
     // Constructor
-    Session(socket_type sock, SessionHost * host, io_context & io_ctx);
+    ServerSession(socket_type sock, ServerSessionHost * host, io_context & io_ctx);
     // Destructor
-    ~Session();
+    ~ServerSession();
+
     // Retrieve session id.
-    std::string const& id() const { return id_; }
+    session_id const& id() const { return id_; }
     // Open the session.
     void Open();
     // Close the session, send close message to client.
@@ -77,7 +77,7 @@ private:
 
 };
 
-} // namespace websocket
+} // namespace api
 } // namespace p2pd
 
-#endif // P2PD_WEBSOCKET_SESSION_H
+#endif // P2PD_API_SERVER_SESSION_H

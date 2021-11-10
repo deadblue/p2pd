@@ -14,6 +14,15 @@ struct Request {
     json::Node params;
 };
 
+namespace request {
+
+struct AddTask {
+    std::string type;
+    std::string uri;
+};
+
+} // namespace request
+
 } // namespace api
 } // namespace p2pd
 

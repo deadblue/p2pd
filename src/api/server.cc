@@ -1,35 +1,30 @@
-#include "websocket/server.h"
+#include "api/server.h"
 
 #include <boost/beast.hpp>
-#include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid_io.hpp>
 #include <mutex>
 
-#include "api/request.h"
-#include "api/response.h"
-#include "api/event.h"
 #include "common/logging.h"
-#include "json/io.h"
 
 namespace p2pd {
-namespace websocket {
+namespace api {
 
 Server::Server(
-    std::shared_ptr<p2pd::engine::Engine> engine,
+    engine_ptr engine,
     io_context & io_ctx
-) : engine_(engine), 
-    io_ctx_(io_ctx),
-    acceptor_(io_ctx) {}
+) : io_ctx_(io_ctx), acceptor_(io_ctx) {
+    ctrl_.reset(new Controller(engine, std::bind(
+        &Server::PublishMessage, this, std::placeholders::_1
+    )));
+}
 
 Server::~Server() {
-    LOG << "Websocket API server closed!";
+    LOG << "API server destroyed!";
 }
 
 // ----- Override |p2pd::BasicServer| -----
 
-void Server::Startup(uint16_t port) {
-    auto host = asio::ip::make_address("0.0.0.0");
-    auto endpoint = endpoint_type{ host, port };
+void Server::Startup(const char * ip, uint16_t port) {
+    auto endpoint = endpoint_type{ asio::ip::make_address(ip), port };
 
     // Start listening
     error_code ec;
@@ -65,43 +60,21 @@ void Server::Shutdown() {
     }
 }
 
-// ----- Override |p2pd::websocket::SessionHost| -----
+// ----- Override |p2pd::api::ServerSessionHost| -----
 
 void Server::OnSessionMessage(
-    Session * session, std::string message
+    session_id id, std::string message
 ) {
-    // Parse incoming message as request 
-    api::Request request;
-    json::ParseAs(message, request);
-    // TODO: Handle request
-    LOG << "Request id=" << request.id
-        << ", method=" << request.method;
-
-    // TODO: Sending response
-    api::Response response;
-    response.id = request.id;
-    response.error = false;
-    auto result = json::ToString(response);
-    session->SendMessage(result);
+    ctrl_->AsyncExecute(std::move(message), std::bind(
+        &Server::SendMessageTo, 
+        this, id, std::placeholders::_1
+    ));
 }
 
-void Server::OnSessionClose(Session * session) {
-    auto session_id = session->id();
-    LOG << "Session closed, id=" << session_id;
-    sessions_.erase(session_id);
+void Server::OnSessionClose(session_id id) {
+    LOG << "Session closed, id=" << id;
+    sessions_.erase(id);
     cond_.notify_all();
-}
-
-// ----- Override |p2pd::engine::Observer| -----
-
-void Server::OnEngineAlert(std::string const& alert_message) {
-    auto alert = api::event::EngineAlert();
-    alert.message = alert_message;
-    PublishEvent("engine.alert", std::move(alert));
-}
-
-void Server::OnTaskStateChanged(uint32_t task_id, engine::TaskState state) {
-    // TODO: Publish event to client.
 }
 
 // ----- private methods -----
@@ -122,29 +95,30 @@ void Server::OnAccepted(error_code const& ec, socket_type socket) {
         }
     } else {
         // Create session
-        auto session = std::make_unique<Session>(
+        auto session = std::make_unique<ServerSession>(
             std::move(socket), this, io_ctx_
         );
-        auto session_id = session->id();
+        auto id = session->id();
         session->Open();
         // Store session.
-        sessions_[session_id] = std::move(session);
+        sessions_[id] = std::move(session);
         // Accept next connection
         DoAccept();
     }
 }
 
-template<typename T>
-void Server::PublishEvent(std::string const& name, T && data) {
-    // Make event message
-    auto event = api::Event(name);
-    boost::uuids::random_generator gen;
-    event.id = boost::uuids::to_string(gen());
-    event.data << std::move(data);
-    auto message = json::ToString(std::move(event));
-    // Publish to all sessions
-    for (auto it = sessions_.begin(); it != sessions_.end(); ++it) {
-        it->second->SendMessage(message);
+void Server::SendMessageTo(session_id id, std::string message) {
+    if (sessions_.count(id) == 0) {
+        LOG << "Can not send message to session: " << id;
+        return;
+    }
+    auto & session = sessions_[id];
+    session->SendMessage(std::move(message));
+}
+
+void Server::PublishMessage(std::string message) {
+    for(auto & it : sessions_) {
+        it.second->SendMessage(message);
     }
 }
 
@@ -155,9 +129,8 @@ std::unique_ptr<Server> create_server(
     auto server = std::make_unique<Server>(
         engine, io_ctx
     );
-    engine->AddObserver(server.get());
     return server;
 }
 
-} // namespace websocket
+} // namespace api
 } // namespace p2pd
