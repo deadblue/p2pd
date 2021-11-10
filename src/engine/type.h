@@ -1,6 +1,9 @@
 #ifndef P2PD_ENGINE_TYPE_H
 #define P2PD_ENGINE_TYPE_H
 
+#include <cstdint>
+#include <string>
+
 namespace p2pd {
 namespace engine {
 
@@ -9,6 +12,12 @@ enum TaskState {
     downloading,
     seeding,
     finished
+};
+
+struct Task {
+    std::string task_id;
+    std::string name;
+    uint64_t size;
 };
 
 } // namespace engine

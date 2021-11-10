@@ -7,16 +7,16 @@
 #include <mutex>
 #include <vector>
 
+#include "api/server.h"
 #include "common/logging.h"
 #include "engine/engine.h"
-#include "websocket/server.h"
 
 namespace p2pd {
 
 Daemon::Daemon(
-    size_t pool_size
-) : pool_size_(pool_size), 
-    io_ctx_(pool_size), 
+    Options& options
+) : options_(options), 
+    io_ctx_(options_.pool_size), 
     signals_(io_ctx_, SIGINT, SIGTERM) {}
 
 int Daemon::Run() {
@@ -25,8 +25,8 @@ int Daemon::Run() {
     // Register signal handler
     AsyncWaitSignal();
     // Start thread pool
-    LOG << "Starting workers, num=" << pool_size_;
-    for(int i = 0; i < pool_size_; ++i) {
+    LOG << "Starting workers, num = " << std::to_string(options_.pool_size);
+    for(int i = 0; i < options_.pool_size; ++i) {
         std::thread([this]{
             io_ctx_.run();
         }).detach();
@@ -36,9 +36,9 @@ int Daemon::Run() {
     auto engine = engine::Engine::Create();
     engine->Startup();
     // Start server
-    auto server = websocket::create_server(engine, io_ctx_);
-    server->Startup(9066);
-    LOG << "Server listening at :9066 ...";
+    auto server = api::create_server(engine, io_ctx_);
+    server->Startup("0.0.0.0", options_.api_port);
+    LOG << "Server listening at 0.0.0.0:" << options_.api_port << "...";
 
     std::mutex mutex;
     std::unique_lock<std::mutex> lock{mutex};

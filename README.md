@@ -7,7 +7,6 @@
     / /_/ / __// /_/ / /_/ /  
    / .___/____/ .___/\__,_/   
   /_/        /_/              
-
 ```
 
 A hobby project for C++ exercise.
@@ -23,8 +22,8 @@ Run BT downloading in daemon, with management API over websocket.
 
 ### Dependencies
 
-* boost >= 1.66.0 (Tested on 1.69.0 & 1.76.0)
-* libtorrent-rasterbar >= 1.2.x (Tested on 1.2.14 & 2.0.4)
+* boost >= 1.66.0 (Tested on 1.69.0 and 1.76.0)
+* libtorrent-rasterbar >= 1.2.x (Tested on 1.2.14 and 2.0.4)
 * json-c >= 0.13 (Tested on 0.13 and 0.15)
 
 Please install (or build) them on your build environment.

@@ -7,6 +7,8 @@
 #include <boost/asio.hpp>
 #include <boost/system/error_code.hpp>
 
+#include "options.h"
+
 namespace p2pd {
 
 class Daemon {
@@ -14,14 +16,14 @@ class Daemon {
 using error_code = boost::system::error_code;
 
 private:
-    size_t pool_size_;
+    Options& options_;
     boost::asio::io_context io_ctx_;
     boost::asio::signal_set signals_;
     std::condition_variable cond_{};
 
 public:
     // Constructor
-    Daemon(size_t pool_size);
+    Daemon(Options& options);
     int Run();
 
 private:

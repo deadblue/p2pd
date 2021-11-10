@@ -16,7 +16,7 @@ namespace lt = libtorrent;
 Engine::Engine() {}
 
 Engine::~Engine() {
-    LOG << "P2P Engine exit!";
+    LOG << "P2P Engine destroyed!";
 }
 
 // ----- Public API -----
