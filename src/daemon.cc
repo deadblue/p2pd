@@ -13,17 +13,23 @@
 
 namespace p2pd {
 
+using signal_set = boost::asio::signal_set;
+
 Daemon::Daemon(
-    Options& options
-) : options_(options), 
-    io_ctx_(options_.pool_size), 
-    signals_(io_ctx_, SIGINT, SIGTERM) {}
+    Options const& options
+) : options_(options), io_ctx_(options_.pool_size){}
 
 int Daemon::Run() {
     // Print banner
     PrintBanner();
+
     // Register signal handler
-    AsyncWaitSignal();
+    std::condition_variable cond{};
+    signal_set signals{io_ctx_, SIGINT, SIGTERM};
+    signals.async_wait(std::bind(&Daemon::OnSignal, 
+        this, &cond, std::placeholders::_1, std::placeholders::_2
+    ));
+
     // Start thread pool
     LOG << "Starting workers, num = " << std::to_string(options_.pool_size);
     for(int i = 0; i < options_.pool_size; ++i) {
@@ -42,7 +48,7 @@ int Daemon::Run() {
 
     std::mutex mutex;
     std::unique_lock<std::mutex> lock{mutex};
-    cond_.wait(lock);
+    cond.wait(lock);
     LOG << "Receive exit signal, shutting down daemon ...";
 
     server->Shutdown();
@@ -64,22 +70,11 @@ void Daemon::PrintBanner() {
     std::cout << banner << std::endl;
 }
 
-void Daemon::AsyncWaitSignal() {
-    signals_.async_wait(std::bind(&Daemon::OnSignal, 
-        this, std::placeholders::_1, std::placeholders::_2
-    ));
-}
-
-void Daemon::OnSignal(const error_code& ec, int signal) {
-    switch (signal) {
-    case SIGINT: 
-    case SIGTERM:
-        cond_.notify_one();
-        break;
-    default:
-        AsyncWaitSignal();
-        break;
-    }
+void Daemon::OnSignal(
+    std::condition_variable * cond, 
+    error_code const& ec, int signal
+) {
+    cond->notify_one();
 }
 
 } // namespace p2pd
