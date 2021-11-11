@@ -2,57 +2,49 @@
 #define P2PD_API_SERVER_SESSION_H
 
 #include <atomic>
-#include <queue>
+#include <memory>
 #include <string>
 
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
 #include <boost/system/error_code.hpp>
 
-#include "api/server_session_host.h"
+#include "api/server/session_host.h"
+#include "api/server/type.h"
 
 namespace p2pd {
 namespace api {
-
-// namespace shortcut
-namespace asio = boost::asio;
-namespace ws = boost::beast::websocket;
 
 /**
  * @brief ServerSession holds a connection which initiated from client.
  * 
  * @author deadblue
  */
-class ServerSession {
+class Session : public std::enable_shared_from_this<Session> {
 
 private:
-    using error_code  = boost::system::error_code;
-    using io_context  = asio::io_context;
-    using strand_type = asio::io_context::strand;
-    using socket_type = asio::ip::tcp::socket;
-    using stream_type = ws::stream<socket_type>;
-    using buffer_type = boost::beast::multi_buffer;
-
     // Session ID.
     session_id id_;
-    // Websocket stream
-    stream_type stream_;
+    // Websocket stream.
+    stream stream_;
     // Pointer to session host.
-    ServerSessionHost * host_;
-    // Executor for reading operations
-    strand_type r_strand_;
-    // Executor for writing operations
-    strand_type w_strand_;
+    SessionHost * host_;
+    // Executor for reading operations.
+    strand r_strand_;
+    // Executor for writing operations.
+    strand w_strand_;
     // Buffer for reading.
-    buffer_type r_buf_{};
+    buffer r_buf_{};
     // Buffer for writing
-    buffer_type w_buf_{};
+    buffer w_buf_{};
+
+    std::atomic_bool closed_{false};
 
 public:
     // Constructor
-    ServerSession(socket_type sock, ServerSessionHost * host, io_context & io_ctx);
+    Session(io_context & io_ctx, socket s, SessionHost * host);
     // Destructor
-    ~ServerSession();
+    ~Session();
 
     // Retrieve session id.
     session_id const& id() const { return id_; }

@@ -7,11 +7,16 @@
 namespace p2pd {
 namespace api {
 
+// Declare seesion ID type.
 using session_id = uintptr_t;
 
-class ServerSession;
-
-class ServerSessionHost {
+/**
+ * @brief   SessionHost is the onwer of Session, which receives events 
+ *          from session.
+ * 
+ * @author  deadblue
+ */
+class SessionHost {
 public:
     /**
      * @brief Fired when session received a text message from client.

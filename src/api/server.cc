@@ -1,6 +1,5 @@
 #include "api/server.h"
 
-#include <boost/beast.hpp>
 #include <mutex>
 
 #include "common/logging.h"
@@ -24,16 +23,16 @@ Server::~Server() {
 // ----- Override |p2pd::BasicServer| -----
 
 void Server::Startup(const char * ip, uint16_t port) {
-    auto endpoint = endpoint_type{ asio::ip::make_address(ip), port };
+    auto ep = endpoint{ asio::ip::make_address(ip), port };
 
     // Start listening
     error_code ec;
-    acceptor_.open(endpoint.protocol(), ec);
+    acceptor_.open(ep.protocol(), ec);
     if(ec) { LOG << "Open acceptor failed: " << ec.message(); }
-    acceptor_.set_option(acceptor_type::reuse_address(true), ec);
-    acceptor_.bind(endpoint, ec);
+    acceptor_.set_option(acceptor::reuse_address(true), ec);
+    acceptor_.bind(ep, ec);
     if(ec) { LOG << "Bind acceptor failed: " << ec.message(); }
-    acceptor_.listen(socket_type::max_listen_connections, ec);
+    acceptor_.listen(socket::max_listen_connections, ec);
     if(ec) { LOG << "Listen failed: " << ec.message(); }
     // Accept incoming connection
     DoAccept();
@@ -46,9 +45,9 @@ void Server::Shutdown() {
     acceptor_.close(ec);
     // Close all still-alive sessions.
     if(sessions_.size() > 0) {
-        LOG << "Wait for sessions closed ...";
-        for(auto it = sessions_.begin(); it != sessions_.end(); ++it) {
-            it->second->Close();
+        LOG << "Closing alive sessions ...";
+        for(auto & it : sessions_) {
+            (it.second)->Close();
         }
         // Waiting for all session closed.
         std::mutex mutex;
@@ -72,7 +71,7 @@ void Server::OnSessionMessage(
 }
 
 void Server::OnSessionClose(session_id id) {
-    LOG << "Session closed, id=" << id;
+    LOG << "Session closed, id = " << id;
     sessions_.erase(id);
     cond_.notify_all();
 }
@@ -87,21 +86,22 @@ void Server::DoAccept() {
     ));
 }
 
-void Server::OnAccepted(error_code const& ec, socket_type socket) {
+void Server::OnAccepted(error_code const& ec, socket s) {
     if(ec) {
-        if(ec != boost::asio::error::operation_aborted) {
+        if(ec != asio::error::operation_aborted) {
             LOG << "Unexcepted error on accept, code=" << ec.value()
                 << ", message=" << ec.message();
         }
     } else {
         // Create session
-        auto session = std::make_unique<ServerSession>(
-            std::move(socket), this, io_ctx_
+        auto session = std::make_shared<Session>(
+            io_ctx_, std::move(s), this
         );
-        auto id = session->id();
         session->Open();
         // Store session.
+        auto id = session->id();
         sessions_[id] = std::move(session);
+        LOG << "New session created, id = " << id;
         // Accept next connection
         DoAccept();
     }

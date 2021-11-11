@@ -6,45 +6,33 @@
 #include <map>
 #include <memory>
 
-#include <boost/asio.hpp>
-#include <boost/system/error_code.hpp>
-
 #include "api/controller.h"
-#include "api/server_session.h"
-#include "api/server_session_host.h"
+#include "api/server/session.h"
+#include "api/server/session_host.h"
+#include "api/server/type.h"
 #include "engine/engine.h"
 
 namespace p2pd {
 namespace api {
-
-// namespace shortcut
-namespace asio  = boost::asio;
-// typename shortcut
-using error_code = boost::system::error_code;
-using io_context = asio::io_context;
 
 /**
  * @brief Server only does the underlying message transmission.
  * 
  * @author deadblue
  */
-class Server :  public ServerSessionHost {
+class Server :  public SessionHost {
 
 private:
-    using acceptor_type = asio::ip::tcp::acceptor;
-    using endpoint_type = asio::ip::tcp::endpoint;
-    using socket_type   = asio::ip::tcp::socket;
-
     using controller_ptr = std::unique_ptr<Controller>;
     using engine_ptr     = std::shared_ptr<engine::Engine>;
-    using session_ptr    = std::unique_ptr<ServerSession>;
+    using session_ptr    = std::shared_ptr<Session>;
 
     // API Controller
     controller_ptr ctrl_{};
     // IO context for network.
     io_context & io_ctx_;
     // Incoming connection acceptor.
-    acceptor_type acceptor_;
+    acceptor acceptor_;
     // Store all alive sessions.
     std::map<session_id, session_ptr> sessions_{};
     // Waiter for shutdown job.
@@ -70,7 +58,8 @@ public:
 
 private:
     void DoAccept();
-    void OnAccepted(error_code const& ec, socket_type socket);
+    void OnAccepted(error_code const& ec, socket s);
+    
     void SendMessageTo(session_id id, std::string message);
     void PublishMessage(std::string message);
 
