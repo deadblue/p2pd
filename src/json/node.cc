@@ -171,7 +171,7 @@ void Node::AddChild(const char * key, Node const& value) {
     if(node_ == nullptr) {
         node_ = json_object_new_object();
     }
-    json_object_object_add(node_, key, value.node_);
+    json_object_object_add(node_, key, json_object_get(value.node_));
 }
 
 template<>
@@ -247,6 +247,10 @@ void Node::AddChild(const char * key, const char * value) {
 }
 
 void Node::AddChild(const char * key, std::string const& value) {
+    AddChild(key, value.c_str());
+}
+
+void Node::AddChild(const char * key, std::string && value) {
     AddChild(key, value.c_str());
 }
 

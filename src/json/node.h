@@ -48,6 +48,7 @@ public:
     template<typename T>
     void AddChild(const char * key, T value);
     void AddChild(const char * key, std::string const& value);
+    void AddChild(const char * key, std::string && value);
     // Add a node child
     void AddChild(const char * key, Node const& value);
     void AddChild(const char * key, Node && value);
