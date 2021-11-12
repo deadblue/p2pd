@@ -105,14 +105,17 @@ void Session::DoWrite(size_t data_size) {
     auto written_size = stream_.write(w_buf_.data(), ec);
     // Error handling
     if(ec) {
-        OnClosed(ec);
+        // TODO: Retry on error?
+        LOG << "Write data error(" << ec.value()
+            << "): " << ec.message();
     } else {
+        // TODO: Retry for incomplete transmission?
         if(written_size != data_size) {
             LOG << "Incomplete writting: " 
                 << written_size << "!=" << data_size;
         }
-        w_buf_.consume(written_size);
     }
+    w_buf_.consume(w_buf_.size());
 }
 
 } // namespace api
