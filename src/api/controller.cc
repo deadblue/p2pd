@@ -21,38 +21,28 @@ Controller::Controller(
     );
 }
 
+void Controller::AsyncExecute(std::string request, callback cb) {
+    boost::asio::post(executor_, std::bind(
+        &Controller::DoExecute, this, std::move(request), cb
+    ));
+}
+
 // ----- Override |engine::Observer| -----
 
 void Controller::OnEngineAlert(std::string const& message) {
-    // Event data
     auto data = event::EngineAlert();
     data.message = message;
-    // Make event
-    auto event = Event("engine.alert");
-    event.data << std::move(data);
-    std::string event_string = json::ToString(event);
-    DLOG << "Publish event: " << event_string;
-    event_cb_( std::move(event_string) );
+    DispatchEvent("engine.alert", std::move(data));
 }
 
 void Controller::OnTaskStateChanged(uint32_t task_id, engine::TaskState state) {
     auto data = event::TaskStateChanged();
     data.task_id = task_id;
     data.state = static_cast<int>(state);
-    // Make event
-    auto event = Event();
-    event.name = "task.state_changed";
-    event.data << std::move(data);
-    event_cb_( json::ToString(event) );
+    DispatchEvent("task.state_changed", std::move(data));
 }
 
 // ----- Private methods -----
-
-void Controller::AsyncExecute(std::string request, callback cb) {
-    boost::asio::post(executor_, std::bind(
-        &Controller::DoExecute, this, std::move(request), cb
-    ));
-}
 
 void Controller::DoExecute(std::string request, callback cb) {
     DLOG << "Receive request: " << request;
@@ -71,6 +61,15 @@ void Controller::DoExecute(std::string request, callback cb) {
     auto response = json::ToString(std::move(resp));
     DLOG << "Sending response: " << response;
     cb(std::move(response));
+}
+
+template<typename T>
+void Controller::DispatchEvent(const char * name, T data) {
+    auto event = Event(name);
+    // TODO: Generate event ID
+    event.data << std::move(data);
+    auto event_str = json::ToString( std::move(event) );
+    event_cb_( std::move(event_str) );
 }
 
 } // namespace api

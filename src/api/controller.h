@@ -27,7 +27,7 @@ using engine_ptr = std::shared_ptr<p2pd::engine::Engine>;
 class Controller : public engine::Observer {
 
 private:
-    using callback = std::function<void(std::string const&)>;
+    using callback    = std::function<void(std::string const&)>;
     using executor    = boost::asio::thread_pool;
     using service_ptr = std::unique_ptr<Service>;
 
@@ -51,6 +51,9 @@ public:
 
 private:
     void DoExecute(std::string request, callback cb);
+
+    template<typename T>
+    void DispatchEvent(const char * name, T data);
 
 };
 
