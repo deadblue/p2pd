@@ -16,24 +16,26 @@ namespace engine {
 
 namespace lt = libtorrent;
 
+using error_code = lt::error_code;
+
 /**
  * @brief The core P2P download engine.
  * 
- * @author Tomo Kunagisa
+ * @author deadblue
  */
 class Engine :  public std::enable_shared_from_this<Engine>, 
                 public lt::plugin,
                 public TaskHost {
 
 private:
-    lt::session * session_;
-    std::vector<Observer *> observers_{};
-
 #if LIBTORRENT_VERSION_MAJOR > 1
     using client_data_type = lt::client_data_t;
 #else
     using client_data_type = void *;
 #endif
+
+    lt::session * session_;
+    std::vector<Observer *> observers_{};
 
 public:
     // Constructor
@@ -46,8 +48,9 @@ public:
     void Startup();
     void Shutdown();
     void AddObserver(Observer * observer);
+
+    void AddMagnet(const char * uri, error_code & ec);
     void AddTorrent(const unsigned char * data, size_t data_size);
-    void AddMagnet(const char * magnet_uri);
     void ListTask();
 
     // Override |libtorrent::plugin|

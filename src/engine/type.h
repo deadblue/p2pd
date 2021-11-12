@@ -10,7 +10,7 @@ namespace engine {
 enum TaskState {
     preparing,
     downloading,
-    seeding,
+    uploading,
     finished
 };
 

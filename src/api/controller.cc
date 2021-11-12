@@ -3,6 +3,7 @@
 #include "api/protocol.h"
 #include "api/service/add_task.h"
 #include "json/io.h"
+#include "log/log.h"
 
 namespace p2pd {
 namespace api {
@@ -23,11 +24,26 @@ Controller::Controller(
 // ----- Override |engine::Observer| -----
 
 void Controller::OnEngineAlert(std::string const& message) {
-    // TODO
+    // Event data
+    auto data = event::EngineAlert();
+    data.message = message;
+    // Make event
+    auto event = Event("engine.alert");
+    event.data << std::move(data);
+    std::string event_string = json::ToString(event);
+    DLOG << "Publish event: " << event_string;
+    event_cb_( std::move(event_string) );
 }
 
 void Controller::OnTaskStateChanged(uint32_t task_id, engine::TaskState state) {
-    // TODO
+    auto data = event::TaskStateChanged();
+    data.task_id = task_id;
+    data.state = static_cast<int>(state);
+    // Make event
+    auto event = Event();
+    event.name = "task.state_changed";
+    event.data << std::move(data);
+    event_cb_( json::ToString(event) );
 }
 
 // ----- Private methods -----
@@ -39,6 +55,7 @@ void Controller::AsyncExecute(std::string request, callback cb) {
 }
 
 void Controller::DoExecute(std::string request, callback cb) {
+    DLOG << "Receive request: " << request;
     // Parsing request
     auto req = Request();
     json::ParseAs(request, req);
@@ -51,7 +68,9 @@ void Controller::DoExecute(std::string request, callback cb) {
         auto & service = services_[req.method];
         resp.error = service->Execute(req.params, resp.result);
     }
-    cb(json::ToString(resp));
+    auto response = json::ToString(std::move(resp));
+    DLOG << "Sending response: " << response;
+    cb(std::move(response));
 }
 
 } // namespace api

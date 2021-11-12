@@ -18,10 +18,11 @@ namespace api {
 using engine_ptr = std::shared_ptr<p2pd::engine::Engine>;
 
 /**
- * @brief Controler is the core module for processing API requests 
- * and publishing API events.
+ * @brief   Controler is the brain of API server. It receives requests from 
+ *          server, performs them in engine, and send response to server. It
+ *          also receives event from engine, and publish to server.
  * 
- * @author deadblue
+ * @author  deadblue
  */
 class Controller : public engine::Observer {
 

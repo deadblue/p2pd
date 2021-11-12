@@ -8,8 +8,8 @@
 #include <vector>
 
 #include "api/server.h"
-#include "common/logging.h"
 #include "engine/engine.h"
+#include "log/log.h"
 
 namespace p2pd {
 
@@ -31,7 +31,7 @@ int Daemon::Run() {
     ));
 
     // Start thread pool
-    LOG << "Starting workers, num = " << std::to_string(options_.pool_size);
+    DLOG << "Starting workers, num = " << std::to_string(options_.pool_size);
     for(int i = 0; i < options_.pool_size; ++i) {
         std::thread([this]{
             io_ctx_.run();
@@ -49,7 +49,7 @@ int Daemon::Run() {
     std::mutex mutex;
     std::unique_lock<std::mutex> lock{mutex};
     cond.wait(lock);
-    LOG << "Receive exit signal, shutting down daemon ...";
+    DLOG << "Receive exit signal, shutting down daemon ...";
 
     server->Shutdown();
     engine->Shutdown();

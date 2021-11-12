@@ -1,5 +1,5 @@
-#ifndef P2PD_JSON_BINDING_H
-#define P2PD_JSON_BINDING_H
+#ifndef P2PD_JSON_IO_H
+#define P2PD_JSON_IO_H
 
 #include <string>
 
@@ -66,4 +66,4 @@ std::string ToString(T && value) {
 } // namespace json
 } // namespace p2pd
 
-#endif // P2PD_JSON_BINDING_H
+#endif // P2PD_JSON_IO_H

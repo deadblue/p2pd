@@ -1,6 +1,6 @@
 #include "api/server/session.h"
 
-#include "common/logging.h"
+#include "log/log.h"
 
 namespace p2pd {
 namespace api {
@@ -13,7 +13,7 @@ Session::Session(
 }
 
 Session::~Session() {
-    LOG << "Session released, id=" << id_;
+    DLOG << "Session released, id=" << id_;
 }
 
 void Session::Open() {
@@ -66,7 +66,7 @@ void Session::OnClosed(error_code const& ec) {
         && ec != asio::error::operation_aborted
         && ec != asio::error::not_connected
     ) {
-        LOG << "Close session on error(" << ec.value()
+        WLOG << "Close session on error(" << ec.value()
             << "): " << ec.message();
     }
     if(!closed_.exchange(true)) {
@@ -106,12 +106,12 @@ void Session::DoWrite(size_t data_size) {
     // Error handling
     if(ec) {
         // TODO: Retry on error?
-        LOG << "Write data error(" << ec.value()
+        WLOG << "Write data error(" << ec.value()
             << "): " << ec.message();
     } else {
         // TODO: Retry for incomplete transmission?
         if(written_size != data_size) {
-            LOG << "Incomplete writting: " 
+            WLOG << "Incomplete writting: " 
                 << written_size << "!=" << data_size;
         }
     }

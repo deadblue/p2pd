@@ -2,7 +2,7 @@
 
 #include <mutex>
 
-#include "common/logging.h"
+#include "log/log.h"
 
 namespace p2pd {
 namespace api {
@@ -17,7 +17,7 @@ Server::Server(
 }
 
 Server::~Server() {
-    LOG << "API server destroyed!";
+    DLOG << "API server destroyed!";
 }
 
 // ----- Override |p2pd::BasicServer| -----
@@ -28,12 +28,12 @@ void Server::Startup(const char * ip, uint16_t port) {
     // Start listening
     error_code ec;
     acceptor_.open(ep.protocol(), ec);
-    if(ec) { LOG << "Open acceptor failed: " << ec.message(); }
+    if(ec) { WLOG << "Open acceptor failed: " << ec.message(); }
     acceptor_.set_option(acceptor::reuse_address(true), ec);
     acceptor_.bind(ep, ec);
-    if(ec) { LOG << "Bind acceptor failed: " << ec.message(); }
+    if(ec) { WLOG << "Bind acceptor failed: " << ec.message(); }
     acceptor_.listen(socket::max_listen_connections, ec);
-    if(ec) { LOG << "Listen failed: " << ec.message(); }
+    if(ec) { WLOG << "Listen failed: " << ec.message(); }
     // Accept incoming connection
     DoAccept();
 }
@@ -55,7 +55,7 @@ void Server::Shutdown() {
         cond_.wait(lock, [this]{
             return sessions_.size() == 0;
         });
-        LOG << "All sessions closed, server is down!";
+        DLOG << "All sessions closed, server is down!";
     }
 }
 
@@ -71,7 +71,7 @@ void Server::OnSessionMessage(
 }
 
 void Server::OnSessionClose(session_id id) {
-    LOG << "Session closed, id = " << id;
+    DLOG << "Session closed, id = " << id;
     sessions_.erase(id);
     cond_.notify_all();
 }
@@ -89,8 +89,8 @@ void Server::DoAccept() {
 void Server::OnAccepted(error_code const& ec, socket s) {
     if(ec) {
         if(ec != asio::error::operation_aborted) {
-            LOG << "Unexcepted error on accept, code=" << ec.value()
-                << ", message=" << ec.message();
+            WLOG << "Accept connections error(" << ec.value()
+                << "): " << ec.message();
         }
     } else {
         // Create session
@@ -101,7 +101,7 @@ void Server::OnAccepted(error_code const& ec, socket s) {
         // Store session.
         auto id = session->id();
         sessions_[id] = std::move(session);
-        LOG << "New session created, id = " << id;
+        DLOG << "New session created, id = " << id;
         // Accept next connection
         DoAccept();
     }
@@ -109,7 +109,7 @@ void Server::OnAccepted(error_code const& ec, socket s) {
 
 void Server::SendMessageTo(session_id id, std::string message) {
     if (sessions_.count(id) == 0) {
-        LOG << "Can not send message to session: " << id;
+        WLOG << "Can not send message to closed session: " << id;
         return;
     }
     auto & session = sessions_[id];
