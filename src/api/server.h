@@ -10,7 +10,6 @@
 #include "api/server/session.h"
 #include "api/server/session_host.h"
 #include "api/server/type.h"
-#include "engine/engine.h"
 
 namespace p2pd {
 namespace api {
@@ -24,7 +23,6 @@ class Server :  public SessionHost {
 
 private:
     using controller_ptr = std::unique_ptr<Controller>;
-    using engine_ptr     = std::shared_ptr<engine::Engine>;
     using session_ptr    = std::shared_ptr<Session>;
 
     // API Controller

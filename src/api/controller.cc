@@ -2,6 +2,7 @@
 
 #include "api/protocol.h"
 #include "api/service/add_task.h"
+#include "engine/engine.h"
 #include "json/io.h"
 #include "log/log.h"
 

@@ -9,10 +9,14 @@
 #include <boost/asio.hpp>
 
 #include "api/service.h"
-#include "engine/engine.h"
 #include "engine/observer.h"
 
 namespace p2pd {
+
+namespace engine {
+class Engine;
+} // namespace engine
+
 namespace api {
 
 using engine_ptr = std::shared_ptr<p2pd::engine::Engine>;
@@ -27,7 +31,7 @@ using engine_ptr = std::shared_ptr<p2pd::engine::Engine>;
 class Controller : public engine::Observer {
 
 private:
-    using callback    = std::function<void(std::string const&)>;
+    using callback    = std::function<void(std::string)>;
     using executor    = boost::asio::thread_pool;
     using service_ptr = std::unique_ptr<Service>;
 
