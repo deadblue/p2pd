@@ -42,12 +42,13 @@ void AddTask::AddTorrent(std::string & data, error_code & ec) {
             dest_size -= 1;
         }
     }
-    auto buf = std::make_unique<uint8_t>(malloc(dest_size));
+    auto dest = (uint8_t *)malloc(dest_size);
     boost::beast::detail::base64::decode(
-        buf.get(), data.c_str(), src_size
+        dest, data.c_str(), src_size
     );
     // Add torrent
-    engine_->AddTorrent(buf.get(), dest_size, ec);
+    engine_->AddTorrent(dest, dest_size, ec);
+    free(dest);
     if(ec) {
         WLOG << "Add torrent task error("<< ec.value() 
             << "): " << ec.message();

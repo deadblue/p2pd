@@ -78,7 +78,9 @@ void Engine::AddMagnet(const char * uri, error_code & ec) {
     }
 }
 
-void Engine::AddTorrent(const unsigned char * data, size_t data_size) {
+void Engine::AddTorrent(
+    const unsigned char * data, size_t data_size, error_code & ec
+) {
     auto params = lt::add_torrent_params{};
     params.ti = std::make_shared<lt::torrent_info>(
         reinterpret_cast<const char*>(data),  data_size
