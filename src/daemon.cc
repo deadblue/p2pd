@@ -39,7 +39,7 @@ int Daemon::Run() {
     }
 
     // Create engine
-    auto engine = engine::Engine::Create();
+    auto engine = engine::create(options_);
     engine->Startup();
     // Start server
     auto server = api::create_server(engine, io_ctx_);

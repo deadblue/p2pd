@@ -8,8 +8,10 @@
 #include <libtorrent/session.hpp>
 #include <libtorrent/version.hpp>
 
-#include "engine/task_host.h"
+#include "options.h"
 #include "engine/observer.h"
+#include "engine/settings.h"
+#include "engine/task_host.h"
 
 namespace p2pd {
 namespace engine {
@@ -17,6 +19,10 @@ namespace engine {
 namespace lt = libtorrent;
 
 using error_code = lt::error_code;
+
+class Engine;
+
+std::shared_ptr<Engine> create(Options const& options);
 
 /**
  * @brief The core P2P download engine.
@@ -36,6 +42,7 @@ private:
 
     lt::session * session_;
     std::vector<Observer *> observers_{};
+    Settings settings_{};
 
 public:
     // Constructor
@@ -44,13 +51,14 @@ public:
     ~Engine();
 
     // ----- Public API -----
-    static std::shared_ptr<Engine> Create();
     void Startup();
     void Shutdown();
     void AddObserver(Observer * observer);
 
     void AddMagnet(const char * uri, error_code & ec);
-    void AddTorrent(const unsigned char * data, size_t data_size);
+    void AddTorrent(
+        const unsigned char * data, size_t data_size, error_code & ec
+    );
     void ListTask();
 
     // Override |libtorrent::plugin|
@@ -65,6 +73,9 @@ public:
     void OnTaskStateChanged(
         uint32_t torrent_id, task_state state
     ) final;
+
+private:
+    friend std::shared_ptr<Engine> create(Options const& options);
 
 };
 

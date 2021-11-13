@@ -2,12 +2,17 @@
 #define P2PD_ENGINE_SETTINGS_H
 
 #include <string>
+#include <vector>
 
 namespace p2pd {
 namespace engine {
 
 struct Settings {
-    std::string download_dir;
+    // Directory for store downloading files.
+    std::string save_dir;
+    // Preinstalled trackers
+    std::vector<std::string> trackers;
+    
 };
 
 } // namespace engine

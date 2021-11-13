@@ -22,11 +22,6 @@ Engine::~Engine() {
 
 // ----- Public API -----
 
-// static
-std::shared_ptr<Engine> Engine::Create() {
-    return std::make_shared<Engine>();
-}
-
 void Engine::Startup() {
     // Make settings
     auto settings = lt::default_settings();
@@ -62,15 +57,22 @@ void Engine::AddObserver(Observer * observer) {
 }
 
 void Engine::AddMagnet(const char * uri, error_code & ec) {
-    DLOG << "Adding magnet: " << uri;
     auto params = lt::parse_magnet_uri(uri, ec);
-    // For test
-    params.save_path = "/data/downloads";
-
-    if(ec) { return; }
+    if(ec) {
+        WLOG << "Parse magnet URI error(" << ec.value() 
+            << "): " << ec.message();
+        return;
+    }
+    params.save_path = settings_.save_dir;
+    if( params.trackers.empty()  && !settings_.trackers.empty() ) {
+        for (auto const& tracker : settings_.trackers) {
+            params.trackers.push_back(tracker);
+        }
+    }
+    // Add torrent to session
     auto handle = session_->add_torrent(std::move(params), ec);
     if(ec) {
-        LOG << "Add BT task error(" << ec.value() 
+        WLOG << "Add BT task error(" << ec.value() 
             << "): " << ec.message();
         return;
     }
@@ -100,10 +102,9 @@ lt::feature_flags_t Engine::implemented_features() {
 std::shared_ptr<lt::torrent_plugin> Engine::new_torrent(
     lt::torrent_handle const& th, client_data_type user_data
 ) {
-    return nullptr;
-    // return std::make_shared<TaskPlugin>(
-    //     th.id(), shared_from_this()
-    // );
+    return std::make_shared<TaskPlugin>(
+        th.id(), shared_from_this()
+    );
 }
 
 void Engine::on_alert(lt::alert const* alert) {
@@ -137,6 +138,13 @@ void Engine::OnTaskStateChanged(uint32_t task_id, task_state task_state) {
     for(auto const& observer : observers_) {
         observer->OnTaskStateChanged(task_id, state);
     }
+}
+
+std::shared_ptr<Engine> create(Options const& options) {
+    auto ptr = std::make_shared<Engine>();
+    // Fill settings in engine
+    ptr->settings_.save_dir = options.save_dir;
+    return ptr;
 }
 
 } // namespace engine
