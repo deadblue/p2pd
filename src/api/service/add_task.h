@@ -13,15 +13,17 @@ public:
     AddTask(engine_ptr engine) : Service(engine) {}
 
     static const char * method() {
-        return "add_task";
+        return "task.add";
     }
     int Execute(
         json::Node const& params, json::Node & result
     ) final;
 
 private:
-    void AddMagnet(std::string & uri);
-    void AddTorrent(std::string & data);
+    using error_code = engine::error_code;
+
+    void AddMagnet(std::string & uri, error_code & ec);
+    void AddTorrent(std::string & data, error_code & ec);
 
 };
 

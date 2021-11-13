@@ -59,7 +59,7 @@ void Controller::DoExecute(std::string request, callback cb) {
         resp.error = service->Execute(req.params, resp.result);
     }
     auto response = json::ToString(std::move(resp));
-    DLOG << "Sending response: " << response;
+    DLOG << "Send response: " << response;
     cb(std::move(response));
 }
 
@@ -69,6 +69,7 @@ void Controller::DispatchEvent(const char * name, T data) {
     // TODO: Generate event ID
     event.data << std::move(data);
     auto event_str = json::ToString( std::move(event) );
+    DLOG << "Dispatch event: " << event_str;
     event_cb_( std::move(event_str) );
 }
 
