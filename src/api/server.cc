@@ -20,8 +20,6 @@ Server::~Server() {
     DLOG << "API server destroyed!";
 }
 
-// ----- Override |p2pd::BasicServer| -----
-
 void Server::Startup(const char * ip, uint16_t port) {
     auto ep = endpoint{ asio::ip::make_address(ip), port };
 
@@ -59,7 +57,7 @@ void Server::Shutdown() {
     }
 }
 
-// ----- Override |p2pd::api::ServerSessionHost| -----
+// ----- Override |p2pd::api::server::SessionHost| -----
 
 void Server::OnSessionMessage(
     session_id id, std::string message

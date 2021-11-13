@@ -50,7 +50,7 @@ public:
     void Startup(const char * ip, uint16_t port);
     void Shutdown();
 
-    // Override |p2pd::api::ServerSessionHost|
+    // Override |p2pd::api::server::SessionHost|
     void OnSessionMessage(
             session_id id, std::string message) final;
     void OnSessionClose(

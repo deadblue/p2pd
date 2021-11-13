@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <memory>
+#include <mutex>
 #include <string>
 
 #include <boost/asio.hpp>
@@ -37,6 +38,8 @@ private:
     buffer r_buf_{};
     // Buffer for writing
     buffer w_buf_{};
+    // Lock for writting
+    std::mutex w_mutex_{};
 
     std::atomic_bool closed_{false};
 

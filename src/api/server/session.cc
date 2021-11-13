@@ -5,6 +5,8 @@
 namespace p2pd {
 namespace api {
 
+using auto_lock = std::lock_guard<std::mutex>;
+
 Session::Session(
     io_context & io_ctx, socket s, SessionHost * host
 ) : stream_(std::move(s)), host_(host), 
@@ -36,6 +38,8 @@ void Session::Close() {
 
 void Session::SendMessage(std::string const& message) {
     if(message.empty()) { return; }
+    // Lock the write operation
+    auto_lock lock{w_mutex_};
     // Put message to write buffer
     auto * data = message.c_str();
     auto data_size = message.size();
@@ -108,12 +112,10 @@ void Session::DoWrite(size_t data_size) {
         // TODO: Retry on error?
         WLOG << "Write data error(" << ec.value()
             << "): " << ec.message();
-    } else {
+    } else if(written_size != data_size) {
         // TODO: Retry for incomplete transmission?
-        if(written_size != data_size) {
-            WLOG << "Incomplete writting: " 
-                << written_size << "!=" << data_size;
-        }
+        WLOG << "Incomplete writting: " 
+            << written_size << "!=" << data_size;
     }
     w_buf_.consume(w_buf_.size());
 }
