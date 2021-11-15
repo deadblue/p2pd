@@ -4,16 +4,21 @@
  *
  ***************************/
 
+#include <iostream>
 #include <memory>
 
-#include "options.h"
 #include "daemon.h"
+#include "options.h"
 
 int main(int argc, char * argv[]) {
-    auto options = p2pd::Options();
+    p2pd::Options options{};
     if( !options.Parse(argc, argv) || options.help ) {
         options.PrintUsage();
-        exit(0);
+        return 0;
+    }
+    if(options.version) {
+        p2pd::Daemon::PrintVersion();
+        return 0;
     }
 
     auto daemon = std::make_unique<p2pd::Daemon>(options);

@@ -1,8 +1,13 @@
 #include "engine/engine.h"
 
+#include <fstream>
+#include <sstream>
+
+#include <libtorrent/alert.hpp>
+#include <libtorrent/info_hash.hpp>
 #include <libtorrent/magnet_uri.hpp>
 #include <libtorrent/torrent_info.hpp>
-#include <libtorrent/alert.hpp>
+#include <libtorrent/session.hpp>
 
 #include "engine/settings.h"
 #include "engine/task_plugin.h"
@@ -22,30 +27,79 @@ Engine::~Engine() {
 
 // ----- Public API -----
 
-void Engine::Startup() {
-    // Make settings
+void fill_settings(Options const& options, Settings & settings) {
+    if(!options.save_dir.empty()) {
+        settings.save_dir = options.save_dir;
+    }
+    if(!options.tracker_list.empty()) {
+        std::ifstream ifs{options.tracker_list};
+        if(ifs) {
+            for(std::string line; std::getline(ifs, line); ) {
+                if(line.empty() || line[0] == '#') continue;
+                DLOG << "Add tracker: " << line;
+                settings.trackers.push_back(line);
+            }
+            ifs.close();
+        }
+    }
+}
+
+lt::session_params make_session_params(Options const& options) {
     auto settings = lt::default_settings();
-    settings.set_str(
-        lt::settings_pack::user_agent, 
-            "p2pd/" P2PD_VERSION 
-            " libtorrent/" LIBTORRENT_VERSION
+    settings.set_str(lt::settings_pack::user_agent, 
+        "p2pd/" P2PD_VERSION " (libtorrent/" LIBTORRENT_VERSION ")"
     );
-    settings.set_str(
-        lt::settings_pack::peer_fingerprint, 
+    settings.set_str(lt::settings_pack::peer_fingerprint,
         lt::generate_fingerprint("PD", 
             P2PD_VERSION_MAJOR, 
-            P2PD_VERSION_MINOR,
+            P2PD_VERSION_MINOR, 
             P2PD_VERSION_PATCH
         )
     );
-    settings.set_bool(
-        lt::settings_pack::enable_dht, true
+    // Listen port
+    std::string listen_addr{"0.0.0.0:"};
+    listen_addr.append(std::to_string(options.bt_port));
+    DLOG << "BT Listen address: " << listen_addr;
+    settings.set_str(lt::settings_pack::listen_interfaces,
+        listen_addr
     );
+    // Announce IP
+    if(!options.ip.empty()) {
+        settings.set_str(lt::settings_pack::announce_ip, 
+            options.ip
+        );
+    }
+    // DHT bootstrap nodes
+    if(!options.dht_node_list.empty()) {
+        std::ifstream ifs{options.dht_node_list};
+        if(ifs) {
+            bool first = true;
+            std::ostringstream oss;
+            for(std::string line; std::getline(ifs, line); ) {
+                if(first) {
+                    first = false;
+                } else {
+                    oss << ",";
+                }
+                oss << line;
+            }
+            ifs.close();
+            settings.set_str(lt::settings_pack::dht_bootstrap_nodes,
+                oss.str()
+            );
+        }
+    }
+    settings.set_bool(lt::settings_pack::enable_dht, true);
+
+    return lt::session_params(std::move(settings));
+}
+
+void Engine::Startup(Options const& options) {
+    fill_settings(options, settings_);
     // Create session
-    session_ = new lt::session(
-        std::move(settings)
-    );
-    session_->add_extension(shared_from_this());
+    auto params = make_session_params(options);
+    params.extensions.push_back(shared_from_this());
+    session_ = new lt::session(std::move(params));
 }
 
 void Engine::Shutdown() {
@@ -63,19 +117,8 @@ void Engine::AddMagnet(const char * uri, error_code & ec) {
             << "): " << ec.message();
         return;
     }
-    params.save_path = settings_.save_dir;
-    if( params.trackers.empty()  && !settings_.trackers.empty() ) {
-        for (auto const& tracker : settings_.trackers) {
-            params.trackers.push_back(tracker);
-        }
-    }
-    // Add torrent to session
-    auto handle = session_->add_torrent(std::move(params), ec);
-    if(ec) {
-        WLOG << "Add BT task error(" << ec.value() 
-            << "): " << ec.message();
-        return;
-    }
+    params.flags ^= lt::torrent_flags::paused;
+    AddTask(std::move(params), ec);
 }
 
 void Engine::AddTorrent(
@@ -85,7 +128,7 @@ void Engine::AddTorrent(
     params.ti = std::make_shared<lt::torrent_info>(
         reinterpret_cast<const char*>(data),  data_size
     );
-    session_->add_torrent(params);
+    AddTask(std::move(params), ec);
 }
 
 void Engine::ListTask() {
@@ -142,11 +185,25 @@ void Engine::OnTaskStateChanged(uint32_t task_id, task_state task_state) {
     }
 }
 
-std::shared_ptr<Engine> create(Options const& options) {
-    auto ptr = std::make_shared<Engine>();
-    // Fill settings in engine
-    ptr->settings_.save_dir = options.save_dir;
-    return ptr;
+// ----- Private methods -----
+void Engine::AddTask(lt::add_torrent_params params, error_code & ec) {
+    params.save_path = settings_.save_dir;
+    if( params.trackers.empty()  && !settings_.trackers.empty() ) {
+        for (auto const& tracker : settings_.trackers) {
+            params.trackers.push_back(tracker);
+        }
+    }
+    // Add torrent to session
+    auto th = session_->add_torrent(std::move(params), ec);
+    if(ec) {
+        WLOG << "Add BT task error(" << ec.value() 
+            << "): " << ec.message();
+        return;
+    }
+}
+
+std::shared_ptr<Engine> create() {
+    return std::make_shared<Engine>();
 }
 
 } // namespace engine

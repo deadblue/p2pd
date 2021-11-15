@@ -10,9 +10,8 @@ namespace engine {
 struct Settings {
     // Directory for store downloading files.
     std::string save_dir;
-    // Preinstalled trackers
+    // Tracker list
     std::vector<std::string> trackers;
-    
 };
 
 } // namespace engine

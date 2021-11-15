@@ -8,15 +8,36 @@ namespace p2pd {
 
 struct Options {
     bool help;
-    uint16_t bt_port = 6881;
-    uint16_t api_port = 9066;
-    uint16_t cli_port = 9068;
-    uint8_t pool_size = 4;
+    bool version;
 
     std::string save_dir;
+    std::string ip;
 
+    uint16_t bt_port = 6881;
+    std::string tracker_list;
+    std::string dht_node_list;
+
+    uint16_t api_port = 9066;
+    std::string api_addr;
+
+    /**
+     * Parse options from command line.
+     * 
+     * @param argc
+     * @param argv
+     * 
+     * @return Operation result.
+     */
     bool Parse(int argc, char * argv[]);
+
+    /**
+     * Print command line usage.
+     */
     void PrintUsage();
+
+private:
+    void FillDefaultValue();
+
 };
 
 } // namespace p2pd

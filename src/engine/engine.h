@@ -5,7 +5,6 @@
 #include <vector>
 
 #include <libtorrent/extensions.hpp>
-#include <libtorrent/session.hpp>
 #include <libtorrent/version.hpp>
 
 #include "options.h"
@@ -13,16 +12,17 @@
 #include "engine/settings.h"
 #include "engine/task_host.h"
 
+namespace libtorrent {
+struct add_torrent_params;
+struct session;
+}
+
 namespace p2pd {
 namespace engine {
 
 namespace lt = libtorrent;
 
 using error_code = lt::error_code;
-
-class Engine;
-
-std::shared_ptr<Engine> create(Options const& options);
 
 /**
  * @brief The core P2P download engine.
@@ -42,6 +42,7 @@ private:
 
     lt::session * session_;
     std::vector<Observer *> observers_{};
+
     Settings settings_{};
 
 public:
@@ -51,7 +52,7 @@ public:
     ~Engine();
 
     // ----- Public API -----
-    void Startup();
+    void Startup(Options const& options);
     void Shutdown();
     void AddObserver(Observer * observer);
 
@@ -75,9 +76,11 @@ public:
     ) final;
 
 private:
-    friend std::shared_ptr<Engine> create(Options const& options);
+    void AddTask(lt::add_torrent_params params, error_code & ec);
 
 };
+
+std::shared_ptr<Engine> create();
 
 } // namespace engine
 } // namespace p2pd
