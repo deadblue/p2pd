@@ -25,22 +25,20 @@ private:
     using controller_ptr = std::unique_ptr<Controller>;
     using session_ptr    = std::shared_ptr<Session>;
 
-    // API Controller
-    controller_ptr ctrl_{};
-    // IO context for network.
-    io_context & io_ctx_;
+    // Executor for network operations.
+    io_context io_ctx_;
     // Incoming connection acceptor.
     acceptor acceptor_;
     // Store all alive sessions.
     std::map<session_id, session_ptr> sessions_{};
     // Waiter for shutdown job.
     std::condition_variable cond_{};
+    // API Controller
+    controller_ptr ctrl_{};
 
 public:
     // Constructor
-    explicit Server(
-        engine_ptr engine, io_context & io_ctx
-    );
+    explicit Server(engine_ptr engine);
     // Destructor
     ~Server();
 
@@ -58,15 +56,22 @@ private:
     void DoAccept();
     void OnAccepted(error_code const& ec, socket s);
     
-    void SendMessageTo(session_id id, std::string message);
-    void PublishMessage(std::string message);
+    /**
+     * Push message to a session.
+     * @param id       Session ID.
+     * @param message  Message to push.
+     */
+    void PushMessage(session_id id, std::string message);
+
+    /**
+     * Broadcast message to all sessions.
+     * @param message  Message to broadcast.
+     */
+    void BroadcastMessage(std::string message);
 
 };
 
-std::unique_ptr<Server> create_server(
-    std::shared_ptr<p2pd::engine::Engine> engine, 
-    io_context & io_ctx
-);
+std::unique_ptr<Server> create_server(engine_ptr engine);
 
 } // namespace api
 } // namespace p2pd

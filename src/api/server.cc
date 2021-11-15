@@ -1,18 +1,19 @@
 #include "api/server.h"
 
 #include <mutex>
+#include <thread>
 
 #include "log/log.h"
 
 namespace p2pd {
 namespace api {
 
-Server::Server(
-    engine_ptr engine,
-    io_context & io_ctx
-) : io_ctx_(io_ctx), acceptor_(io_ctx) {
+Server::Server(engine_ptr engine) 
+    :   io_ctx_(std::thread::hardware_concurrency()), 
+        acceptor_(io_ctx_) {
+    // Create controller
     ctrl_.reset(new Controller(engine, std::bind(
-        &Server::PublishMessage, this, std::placeholders::_1
+        &Server::BroadcastMessage, this, std::placeholders::_1
     )));
 }
 
@@ -32,8 +33,22 @@ void Server::Startup(const char * ip, uint16_t port) {
     if(ec) { WLOG << "Bind acceptor failed: " << ec.message(); }
     acceptor_.listen(socket::max_listen_connections, ec);
     if(ec) { WLOG << "Listen failed: " << ec.message(); }
+
     // Accept incoming connection
     DoAccept();
+
+    // Start thread pool
+    auto pool_size = std::thread::hardware_concurrency();
+    DLOG << "Starting thread pool, size=" << pool_size;
+    for(int i = 0; i < pool_size; ++i) {
+        std::thread([this]{
+            auto thread_id = std::this_thread::get_id();
+            DLOG << "Start worker thread for server IO, id=" << thread_id;
+            auto count = io_ctx_.run();
+            DLOG << "Worker thread exit, id=" << thread_id
+                << ", jobs=" << count;
+        }).detach();
+    }
 }
 
 void Server::Shutdown() {
@@ -63,7 +78,7 @@ void Server::OnSessionMessage(
     session_id id, std::string message
 ) {
     ctrl_->AsyncExecute(std::move(message), std::bind(
-        &Server::SendMessageTo, 
+        &Server::PushMessage, 
         this, id, std::placeholders::_1
     ));
 }
@@ -91,43 +106,37 @@ void Server::OnAccepted(error_code const& ec, socket s) {
                 << "): " << ec.message();
         }
     } else {
-        // Create session
+        // Create session.
         auto session = std::make_shared<Session>(
             io_ctx_, std::move(s), this
         );
-        session->Open();
         // Store session.
         auto id = session->id();
         sessions_[id] = std::move(session);
+        sessions_[id]->Open();
         DLOG << "New session created, id = " << id;
         // Accept next connection
         DoAccept();
     }
 }
 
-void Server::SendMessageTo(session_id id, std::string message) {
+void Server::PushMessage(session_id id, std::string message) {
     if (sessions_.count(id) == 0) {
         WLOG << "Can not send message to closed session: " << id;
         return;
     }
     auto & session = sessions_[id];
-    session->SendMessage(std::move(message));
+    session->SendMessage(message);
 }
 
-void Server::PublishMessage(std::string message) {
+void Server::BroadcastMessage(std::string message) {
     for(auto & it : sessions_) {
         it.second->SendMessage(message);
     }
 }
 
-std::unique_ptr<Server> create_server(
-    std::shared_ptr<p2pd::engine::Engine> engine, 
-    io_context & io_ctx
-) {
-    auto server = std::make_unique<Server>(
-        engine, io_ctx
-    );
-    return server;
+std::unique_ptr<Server> create_server(engine_ptr engine) {
+    return std::make_unique<Server>(engine);
 }
 
 } // namespace api

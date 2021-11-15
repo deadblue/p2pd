@@ -1,9 +1,6 @@
 #ifndef P2PD_DAEMON_H
 #define P2PD_DAEMON_H
 
-#include <memory>
-#include <condition_variable>
-
 #include <boost/asio.hpp>
 #include <boost/system/error_code.hpp>
 
@@ -14,13 +11,15 @@ namespace p2pd {
 class Daemon {
 
 private:
-    using io_context = boost::asio::io_context;
+    using signal_set = boost::asio::signal_set;
     using error_code = boost::system::error_code;
 
     Options const& options_;
-    io_context io_ctx_;
 
 public:
+    // Print daemon version.
+    static void PrintVersion();
+
     // Constructor
     Daemon(Options const& options);
 
@@ -30,7 +29,7 @@ public:
 private:
     void PrintBanner();
     void OnSignal(
-        std::condition_variable * cond, 
+        signal_set * signals, 
         error_code const& ec, int signal
     );
 
