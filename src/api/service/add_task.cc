@@ -10,12 +10,12 @@ namespace api {
 namespace service {
 
 int AddTask::Execute(json::Node const& params, json::Node & result) {
-    auto rp = params >> api::request::AddTask();
+    auto sp = params >> request::AddTask();
     auto ec = error_code{};
-    if(rp.type == "magnet") {
-        AddMagnet(rp.uri, ec);
-    } else if(rp.type == "torrent") {
-        AddTorrent(rp.uri, ec);
+    if(sp.type == "magnet") {
+        AddMagnet(sp.uri, ec);
+    } else if(sp.type == "torrent") {
+        AddTorrent(sp.uri, ec);
     }
     return ec ? ec.value() : 0;
 }

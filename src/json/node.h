@@ -13,18 +13,18 @@ class Node {
 public:
     // Constructor
     explicit Node(json_object * node = nullptr);
-    // Copy constructor
-    Node(Node const& other) = default;
     // Move constructor
     Node(Node && other);
+    // Delete copy constructor
+    Node(Node const& other) = delete;
     // Destructor
     ~Node();
 
-    // Overloading opeatror
+    // Overloading subscript access opeatrors
     Node operator[](const char * key) const;
     Node operator[](int index) const;
 
-    // Overloading casting operator
+    // Overloading casting operators
     operator bool() const;
     operator int() const;
     operator int64_t() const;
@@ -32,26 +32,27 @@ public:
     operator double() const;
     operator const char *() const;
 
-    // Overloading assign operator
+    // Overloading assign operators
     Node& operator=(bool value);
     Node& operator=(int value);
     Node& operator=(int64_t value);
     Node& operator=(uint64_t value);
     Node& operator=(double value);
     Node& operator=(const char * value);
-    Node& operator=(const Node & other);
+    Node& operator=(std::string const& value);
+    Node& operator=(std::string && value);
+    Node& operator=(Node const& other);
+    Node& operator=(Node && other);
 
     // Return array list when node is an array, or 0.
     int Length() const;
+    // Append an element into node, when node is an array.
+    void Append(Node const& element);
+    void Append(Node && element);
 
-    // Add a child when node is an object, or do nothing.
-    template<typename T>
-    void AddChild(const char * key, T value);
-    void AddChild(const char * key, std::string const& value);
-    void AddChild(const char * key, std::string && value);
-    // Add a node child
-    void AddChild(const char * key, Node const& value);
-    void AddChild(const char * key, Node && value);
+    // Attach a child on node, when node is an object.
+    void Attach(const char * key, Node const& value);
+    void Attach(const char * key, Node && value);
 
     // Stringify
     std::string ToString();
@@ -59,8 +60,8 @@ public:
 private:
     json_object * node_;
 
-    template<typename T>
-    friend T& operator<<(T && to, Node && from);
+    bool EnsureArray();
+    bool EnsureObject();
 };
 
 Node Parse(const char * str);

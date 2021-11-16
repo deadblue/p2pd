@@ -57,7 +57,7 @@ private:
     void DoExecute(std::string request, callback cb);
 
     template<typename T>
-    void DispatchEvent(const char * name, T data);
+    void DispatchEvent(const char * name, T const& data);
 
 };
 

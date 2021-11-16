@@ -33,14 +33,14 @@ void Controller::AsyncExecute(std::string request, callback cb) {
 void Controller::OnEngineAlert(std::string const& message) {
     auto data = event::EngineAlert();
     data.message = message;
-    DispatchEvent("engine.alert", std::move(data));
+    DispatchEvent("engine.alert", data);
 }
 
 void Controller::OnTaskStateChanged(uint32_t task_id, engine::TaskState state) {
     auto data = event::TaskStateChanged();
     data.task_id = task_id;
     data.state = static_cast<int>(state);
-    DispatchEvent("task.state_changed", std::move(data));
+    DispatchEvent("task.state_changed", data);
 }
 
 // ----- Private methods -----
@@ -59,17 +59,17 @@ void Controller::DoExecute(std::string request, callback cb) {
         auto & service = services_[req.method];
         resp.error = service->Execute(req.params, resp.result);
     }
-    auto response = json::ToString(std::move(resp));
+    auto response = json::ToString(resp);
     DLOG << "Send response: " << response;
     cb(std::move(response));
 }
 
 template<typename T>
-void Controller::DispatchEvent(const char * name, T data) {
+void Controller::DispatchEvent(const char * name, T const& data) {
     auto event = Event(name);
     // TODO: Generate event ID
-    event.data << std::move(data);
-    auto event_str = json::ToString( std::move(event) );
+    event.data << data;
+    auto event_str = json::ToString(event);
     DLOG << "Dispatch event: " << event_str;
     event_cb_( std::move(event_str) );
 }
