@@ -3,6 +3,8 @@
 #include <mutex>
 #include <thread>
 
+#include "api/controller.h"
+#include "api/server/session.h"
 #include "log/log.h"
 
 namespace p2pd {

@@ -6,13 +6,21 @@
 #include <map>
 #include <memory>
 
-#include "api/controller.h"
-#include "api/server/session.h"
 #include "api/server/session_host.h"
 #include "api/server/type.h"
 
 namespace p2pd {
+
+namespace engine {
+class Engine;
+} // namespace engine
+
 namespace api {
+
+class Controller;
+class Session;
+
+using engine_ptr = std::shared_ptr<engine::Engine>;
 
 /**
  * @brief Server only does the underlying message transmission.
@@ -55,14 +63,12 @@ public:
 private:
     void DoAccept();
     void OnAccepted(error_code const& ec, socket s);
-    
     /**
      * Push message to a session.
      * @param id       Session ID.
      * @param message  Message to push.
      */
     void PushMessage(session_id id, std::string message);
-
     /**
      * Broadcast message to all sessions.
      * @param message  Message to broadcast.
