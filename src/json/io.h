@@ -9,25 +9,17 @@
 namespace p2pd {
 namespace json {
 
-// ----- Object unmarshallers -----
+// ----- Struct unmarshallers -----
 template<typename T>
 void operator>>(Node const& from, T & to);
 template<typename T>
-void operator>>(Node && from, T & to);
-template<typename T>
 T& operator>>(Node const& from, T && to);
-template<typename T>
-T& operator>>(Node && from, T && to);
 
-// ----- Object marshallers -----
+// ----- Struct marshallers -----
 template<typename T>
 void operator<<(Node & to, T const& from);
 template<typename T>
-void operator<<(Node & to, T && from);
-template<typename T>
 Node& operator<<(Node && to, T const& from);
-template<typename T>
-Node& operator<<(Node && to, T && from);
 
 // ----- Vector unmarshallers -----
 template<typename T>

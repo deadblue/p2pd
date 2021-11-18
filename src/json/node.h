@@ -20,29 +20,29 @@ public:
     // Destructor
     ~Node();
 
-    // Overloading subscript access opeatrors
+    // Unmarshal operators
+    void operator>>(bool & value);
+    void operator>>(int & value);
+    void operator>>(int64_t & value);
+    void operator>>(uint64_t & value);
+    void operator>>(double & value);
+    void operator>>(std::string & value);
+    void operator>>(Node & value);
+
+    // Marshal operators
+    Node& operator<<(bool value);
+    Node& operator<<(int value);
+    Node& operator<<(int64_t value);
+    Node& operator<<(uint64_t value);
+    Node& operator<<(double value);
+    Node& operator<<(const char * value);
+    Node& operator<<(std::string const& value);
+    Node& operator<<(Node const& value);
+    Node& operator<<(Node && value);
+
+    // Member-access opeatrors
     Node operator[](const char * key) const;
     Node operator[](int index) const;
-
-    // Overloading casting operators
-    operator bool() const;
-    operator int() const;
-    operator int64_t() const;
-    operator uint64_t() const;
-    operator double() const;
-    operator const char *() const;
-
-    // Overloading assign operators
-    Node& operator=(bool value);
-    Node& operator=(int value);
-    Node& operator=(int64_t value);
-    Node& operator=(uint64_t value);
-    Node& operator=(double value);
-    Node& operator=(const char * value);
-    Node& operator=(std::string const& value);
-    Node& operator=(std::string && value);
-    Node& operator=(Node const& other);
-    Node& operator=(Node && other);
 
     // Return array list when node is an array, or 0.
     int Length() const;

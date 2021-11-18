@@ -12,15 +12,15 @@ namespace json {
 #define UNMARSHAL_VECTOR_FIELD(FIELD)   \
     to.FIELD >>= from[#FIELD];
 
-#define DEFINE_UNMARSHALLER(TYPE, BINDINGS)                 \
-    template<>                                              \
-    void operator>><TYPE>(Node const& from, TYPE & to) {    \
-        BINDINGS                                            \
-    }                                                       \
-    template<>                                              \
-    TYPE& operator>><TYPE>(Node const& from, TYPE && to) {  \
-        BINDINGS                                            \
-        return to;                                          \
+#define DEFINE_UNMARSHALLER(STRUCT, BINDINGS)   \
+    template<>                                                      \
+    void operator>><STRUCT>(Node const& from, STRUCT & to) {        \
+        BINDINGS                                                    \
+    }                                                               \
+    template<>                                                      \
+    STRUCT& operator>><STRUCT>(Node const& from, STRUCT && to) {    \
+        BINDINGS                                                    \
+        return to;                                                  \
     }
 
 #define MARSHAL_FIELD(FIELD)    \
@@ -29,15 +29,15 @@ namespace json {
 #define MARSHAL_VECTOR_FIELD(FIELD) \
     to.Attach(#FIELD, Node() <<= from.FIELD);
 
-#define DEFINE_MARSHALLER(TYPE, BINDINGS)   \
-    template<>                                              \
-    void operator<<<TYPE>(Node & to, TYPE const& from) {    \
-        BINDINGS                                            \
-    }                                                       \
-    template<>                                              \
-    Node& operator<<<TYPE>(Node && to, TYPE const& from) {  \
-        BINDINGS                                            \
-        return to;                                          \
+#define DEFINE_MARSHALLER(STRUCT, BINDINGS) \
+    template<>                                                  \
+    void operator<<<STRUCT>(Node & to, STRUCT const& from) {    \
+        BINDINGS                                                \
+    }                                                           \
+    template<>                                                  \
+    Node& operator<<<STRUCT>(Node && to, STRUCT const& from) {  \
+        BINDINGS                                                \
+        return to;                                              \
     }
 
 } // namespace json
