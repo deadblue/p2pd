@@ -1,7 +1,6 @@
 #include "api/protocol/event.h"
 
-#include "api/protocol/macro.h"
-#include "json/io.h"
+#include "json/macro.h"
 
 namespace p2pd {
 namespace json {

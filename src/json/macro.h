@@ -1,11 +1,16 @@
-#ifndef P2PD_API_MACRO_H
-#define P2PD_API_MACRO_H
+#ifndef P2PD_JSON_MACRO_H
+#define P2PD_JSON_MACRO_H
+
+#include "json/io.h"
 
 namespace p2pd {
 namespace json {
 
 #define UNMARSHAL_FIELD(FIELD) \
     from[#FIELD] >> to.FIELD;
+
+#define UNMARSHAL_VECTOR_FIELD(FIELD)   \
+    to.FIELD >>= from[#FIELD];
 
 #define DEFINE_UNMARSHALLER(TYPE, BINDINGS)                 \
     template<>                                              \
@@ -18,8 +23,11 @@ namespace json {
         return to;                                          \
     }
 
-#define MARSHAL_FIELD(FIELD)   \
+#define MARSHAL_FIELD(FIELD)    \
     to.Attach(#FIELD, Node() << from.FIELD);
+
+#define MARSHAL_VECTOR_FIELD(FIELD) \
+    to.Attach(#FIELD, Node() <<= from.FIELD);
 
 #define DEFINE_MARSHALLER(TYPE, BINDINGS)   \
     template<>                                              \
@@ -35,4 +43,4 @@ namespace json {
 } // namespace json
 } // namespace p2pd
 
-#endif // P2PD_API_MACRO_H
+#endif // P2PD_JSON_MACRO_H
