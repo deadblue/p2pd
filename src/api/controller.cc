@@ -1,6 +1,7 @@
 #include "api/controller.h"
 
-#include "api/protocol.h"
+#include "api/error.h"
+#include "api/message.h"
 #include "api/service/add_task.h"
 #include "engine/engine.h"
 #include "json/io.h"
@@ -31,16 +32,16 @@ void Controller::AsyncExecute(std::string request, callback cb) {
 // ----- Override |engine::Observer| -----
 
 void Controller::OnEngineAlert(std::string const& message) {
-    auto data = event::EngineAlert();
-    data.message = message;
-    DispatchEvent("engine.alert", data);
+    // auto data = event::EngineAlert();
+    // data.message = message;
+    // DispatchEvent("engine.alert", data);
 }
 
 void Controller::OnTaskStateChanged(uint32_t task_id, engine::TaskState state) {
-    auto data = event::TaskStateChanged();
-    data.task_id = task_id;
-    data.state = static_cast<int>(state);
-    DispatchEvent("task.state_changed", data);
+    // auto data = event::TaskStateChanged();
+    // data.task_id = task_id;
+    // data.state = static_cast<int>(state);
+    // DispatchEvent("task.state_changed", data);
 }
 
 // ----- Private methods -----
