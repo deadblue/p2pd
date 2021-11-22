@@ -1,16 +1,30 @@
 #include "api/service/add_task.h"
-#include "api/protocol.h"
 #include "json/io.h"
+#include "json/macro.h"
 #include "log/log.h"
 
 #include <boost/beast/core/detail/base64.hpp>
 
 namespace p2pd {
+
+namespace json {
+
+DEFINE_UNMARSHALLER(api::service::AddTaskParams,
+    UNMARSHAL_FIELD(type)
+    UNMARSHAL_FIELD(uri)
+)
+
+DEFINE_MARSHALLER(api::service::AddTaskResult,
+    MARSHAL_FIELD(task_id)
+)
+
+} // namespace json
+
 namespace api {
 namespace service {
 
 int AddTask::Execute(json::Node const& params, json::Node & result) {
-    auto sp = params >> request::AddTask();
+    auto sp = params >> AddTaskParams();
     auto ec = error_code{};
     if(sp.type == "magnet") {
         AddMagnet(sp.uri, ec);
@@ -57,4 +71,5 @@ void AddTask::AddTorrent(std::string & data, error_code & ec) {
 
 } // namespace service
 } // namespace api
+
 } // namespace p2pd

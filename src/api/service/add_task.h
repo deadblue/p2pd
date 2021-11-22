@@ -7,6 +7,15 @@ namespace p2pd {
 namespace api {
 namespace service {
 
+struct AddTaskParams {
+    std::string type;
+    std::string uri;
+};
+
+struct AddTaskResult {
+    std::string task_id;
+};
+
 class AddTask: public Service {
 
 public:
