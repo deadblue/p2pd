@@ -26,6 +26,12 @@ namespace json {
 #define MARSHAL_FIELD(FIELD)    \
     to.Attach(#FIELD, Node() << from.FIELD);
 
+#define MARSHAL_FIELD_WITH_NAME(FIELD, NAME)    \
+    to.Attach(NAME, Node() << from.FIELD);
+
+#define MARSHAL_FIELD_WITH_TYPE(FIELD, TYPE)    \
+    to.Attach(#FIELD, Node() << static_cast<TYPE>(from.FIELD));
+
 #define MARSHAL_VECTOR_FIELD(FIELD) \
     to.Attach(#FIELD, Node() <<= from.FIELD);
 
