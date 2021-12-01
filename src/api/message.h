@@ -1,6 +1,7 @@
 #ifndef P2PD_API_MESSAGE_H
 #define P2PD_API_MESSAGE_H
 
+#include <cstdlib>
 #include <string>
 
 #include "json/node.h"
@@ -33,12 +34,11 @@ struct Response {
  * The outgoing message that server sends to all clients.
  */
 struct Event {
-    std::string id;
     std::string name;
     json::Node data;
 
     Event() = default;
-    Event(std::string const& name) : name(name) {}
+    Event(const char * name) : name(name) {}
 };
 
 } // namespace api

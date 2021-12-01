@@ -7,15 +7,10 @@ namespace p2pd {
 namespace api {
 namespace service {
 
-/**
- * TaskList server get all tasks in engine.
- */
-class TaskList: public Service {
+class TaskList final : public Service {
 public:
     // Override |p2pd:api::Service|
-    const char * method() noexcept final {
-        return "task.list";
-    }
+    const char * method() noexcept final;
     int Execute(
         json::Node const& params, json::Node & result
     ) final;

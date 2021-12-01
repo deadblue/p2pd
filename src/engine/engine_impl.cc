@@ -121,11 +121,10 @@ void EngineImpl::Shutdown() {
 void EngineImpl::AddMagnet(const char * uri, error_code & ec) {
     auto params = lt::parse_magnet_uri(uri, ec);
     if(ec) {
-        WLOG << "Parse magnet URI error(" << ec.value() 
-            << "): " << ec.message();
+        ec = errors::invalid_magnet_uri;
         return;
     }
-    AddTaskInternal(std::move(params), ec);
+    AddTaskInternal(std::move(params));
 }
 
 void EngineImpl::AddTorrent(
@@ -135,8 +134,11 @@ void EngineImpl::AddTorrent(
     params.ti = std::make_shared<lt::torrent_info>(
         reinterpret_cast<const char*>(data),  data_size, ec
     );
-    if(ec) { return; }
-    AddTaskInternal(std::move(params), ec);
+    if(ec) {
+        ec = errors::invalid_torrent_data;
+        return;
+    }
+    AddTaskInternal(std::move(params));
 }
 
 void EngineImpl::ListTask(std::vector<TaskSummary> & summaries) {
@@ -230,7 +232,7 @@ void EngineImpl::on_alert(lt::alert const* alert) {
             auto * p = lt::alert_cast<lt::add_torrent_alert>(alert);
             TaskMetadata metadata;
             if(fill_task_metadata(p->handle, metadata)) {
-                for(auto * ob : observers_) {
+                for(auto const* ob : observers_) {
                     ob->OnTaskCreated(metadata);
                 }
             }
@@ -241,7 +243,7 @@ void EngineImpl::on_alert(lt::alert const* alert) {
             auto * p = lt::alert_cast<lt::metadata_received_alert>(alert);
             TaskMetadata metadata;
             if(fill_task_metadata(p->handle, metadata)) {
-                for(auto * ob : observers_) {
+                for(auto const* ob : observers_) {
                     ob->OnTaskMetadataReceived(metadata);
                 }
             }
@@ -254,7 +256,7 @@ void EngineImpl::on_alert(lt::alert const* alert) {
             if(encode_hash(p->handle.info_hash(), task_id)) {
                 auto old_state = convert_state(p->prev_state);
                 auto new_state = convert_state(p->state);
-                for(auto * ob : observers_) {
+                for(auto const* ob : observers_) {
                     ob->OnTaskStateChanged(task_id, old_state, new_state);
                 }
             }
@@ -280,11 +282,18 @@ void EngineImpl::on_alert(lt::alert const* alert) {
 
 // ----- Private methods -----
 
-void EngineImpl::AddTaskInternal(lt::add_torrent_params params, error_code & ec) {
+void EngineImpl::AddTaskInternal(lt::add_torrent_params params) {
     params.save_path = settings_.save_dir;
     if( params.trackers.empty()  && !settings_.trackers.empty() ) {
         for (auto const& tracker : settings_.trackers) {
             params.trackers.push_back(tracker);
+        }
+    }
+    if(params.ti) {
+        auto files = params.ti->files();
+        for(size_t i = 0; i < files.num_files(); ++i) {
+            auto file_path = files.file_path(i);
+            params.renamed_files[i] = file_path.append(".p2pd");
         }
     }
     session_->async_add_torrent(std::move(params));

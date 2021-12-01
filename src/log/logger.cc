@@ -5,10 +5,13 @@
 #include <cstring>
 #include <iomanip>
 #include <iostream>
+#include <mutex>
 #include <sstream>
 
 namespace p2pd {
 namespace log {
+
+using auto_lock = std::lock_guard<std::mutex>;
 
 #define ENV_LOG_LEVEL "P2PD_LOG_LEVEL"
 
@@ -31,6 +34,8 @@ Level get_log_level() {
 }
 
 static Level log_level = get_log_level();
+
+static std::mutex g_mutex{};
 
 class NullBuffer : public std::streambuf {
 protected:
@@ -79,7 +84,10 @@ Logger::~Logger() {
         return;
     }
     auto * ss = static_cast<std::ostringstream *>(stream_.get());
-    std::cout << ss->str() << std::endl;
+    {
+        auto_lock lock{g_mutex};
+        std::cout << ss->str() << std::endl;
+    }
 }
 
 std::ostream & Logger::stream() const {

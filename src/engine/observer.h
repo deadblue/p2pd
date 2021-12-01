@@ -21,13 +21,13 @@ public:
     /**
      * @brief   Called when a new task is created in engine.
      */
-    virtual void OnTaskCreated(TaskMetadata const& metadata) {}
+    virtual void OnTaskCreated(TaskMetadata const& metadata) const {}
 
     /**
      * @brief   Called when a task has received metadata from other nodes, only 
      *          when a task is added without metadata (e.g. by magnet URI).
      */
-    virtual void OnTaskMetadataReceived(TaskMetadata const& metadata) {}
+    virtual void OnTaskMetadataReceived(TaskMetadata const& metadata) const {}
 
     /**
      * @brief   Called when task state changed.
@@ -36,7 +36,7 @@ public:
         std::string const& task_id, 
         TaskSummary::State old_state,
         TaskSummary::State new_state
-    ) {}
+    ) const {}
 
     // TODO: Declare more observer methods.
     

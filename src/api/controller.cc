@@ -34,13 +34,17 @@ void Controller::AsyncExecute(std::string request, callback cb) {
 
 // ----- Override |engine::Observer| -----
 
-void Controller::OnTaskCreated(engine::TaskMetadata const& metadata) {
+void Controller::OnTaskCreated(
+    engine::TaskMetadata const& metadata
+) const {
     static const char * event_name = "task.created";
     DispatchEvent(event_name, metadata);
 }
 
-void Controller::OnTaskMetadataReceived(engine::TaskMetadata const& metadata) {
-    static const char * event_name = "task.metadata.received";
+void Controller::OnTaskMetadataReceived(
+    engine::TaskMetadata const& metadata
+) const {
+    static const char * event_name = "task.metadataReceived";
     DispatchEvent(event_name, metadata);
 }
 
@@ -48,8 +52,8 @@ void Controller::OnTaskStateChanged(
     std::string const& task_id, 
     engine::TaskSummary::State old_state,
     engine::TaskSummary::State new_state
-) {
-    static const char * event_name = "task.state.updated";
+) const {
+    static const char * event_name = "task.stateUpdated";
     event::TaskStateUpdated event{
         task_id, 
         static_cast<int>(old_state), 
@@ -68,26 +72,25 @@ void Controller::Register(Service * serv, engine_ptr const& engine) {
 void Controller::DoExecute(std::string request, callback cb) {
     DLOG << "Receive request: " << request;
     // Parsing request
-    auto req = Request();
+    Request req;
     json::ParseAs(request, req);
     // Make response
-    auto resp = Response();
+    Response resp;
     resp.id = req.id;
     if(services_.count(req.method) == 0) {
-        resp.error = Error::UnsupportedMethod;
+        resp.error = errors::unsupported_method;
     } else {
         auto & service = services_[req.method];
         resp.error = service->Execute(req.params, resp.result);
     }
     auto response = json::ToString(resp);
     DLOG << "Send response: " << response;
-    cb(std::move(response));
+    cb( std::move(response) );
 }
 
 template<typename T>
-void Controller::DispatchEvent(const char * name, T const& data) {
-    auto event = Event(name);
-    // TODO: Generate event ID
+void Controller::DispatchEvent(const char * name, T const& data) const {
+    Event event{name};
     event.data << data;
     auto event_str = json::ToString(event);
     DLOG << "Dispatch event: " << event_str;

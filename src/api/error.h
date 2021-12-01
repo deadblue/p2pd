@@ -4,12 +4,12 @@
 namespace p2pd {
 namespace api {
 
-enum Error {
+enum errors {
     // ----- Internal errors -----
-    UnsupportedMethod = -1,
-    InvalidParameters = -2,
+    unsupported_method = -1,
+    invalid_parameters = -2,
 
-    OK = 0, // Horizon
+    ok = 0, // Horizon
 
     // ----- Service errors -----
 };

@@ -64,7 +64,7 @@ public:
     void on_alert(lt::alert const* alert) final;
 
 private:
-    void AddTaskInternal(lt::add_torrent_params params, error_code & ec);
+    void AddTaskInternal(lt::add_torrent_params params);
 
 };
 

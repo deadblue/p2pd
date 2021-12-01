@@ -1,5 +1,7 @@
 #include "api/service/task_inspect.h"
 
+#include "engine/error_code.h"
+#include "engine/type.h"
 #include "json/macro.h"
 
 namespace p2pd {
@@ -19,11 +21,24 @@ DEFINE_UNMARSHALLER(TaskInspectParams,
 namespace api {
 namespace service {
 
+const char * TaskInspect::method() noexcept {
+    return "task.inspect";
+}
+
 int TaskInspect::Execute(
     json::Node const& params, json::Node & result
 ) {
     auto p = params >> TaskInspectParams();
-    return 0;
+
+    engine::error_code ec;
+    engine::TaskStatus status;
+    engine_->InspectTask(p.task_id, status, ec);
+    if(ec) {
+        return ec.value();
+    } else {
+        result << status;
+        return 0;
+    }
 }
 
 } // namespace service

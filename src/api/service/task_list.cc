@@ -6,6 +6,10 @@ namespace p2pd {
 namespace api {
 namespace service {
 
+const char * TaskList::method() noexcept {
+    return "task.list";
+}
+
 int TaskList::Execute(
         json::Node const& params, json::Node & result
 ) {

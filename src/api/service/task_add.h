@@ -7,7 +7,7 @@ namespace p2pd {
 namespace api {
 namespace service {
 
-class TaskAdd final :   public Service {
+class TaskAdd final : public Service {
 public:
     // Override |p2pd:api::Service|
     const char * method() noexcept final;

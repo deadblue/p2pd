@@ -18,7 +18,6 @@ DEFINE_MARSHALLER(p2pd::api::Response,
 )
 
 DEFINE_MARSHALLER(p2pd::api::Event,
-    MARSHAL_FIELD(id)
     MARSHAL_FIELD(name)
     MARSHAL_FIELD(data)
 )

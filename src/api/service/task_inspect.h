@@ -7,16 +7,13 @@ namespace p2pd {
 namespace api {
 namespace service {
 
-class TaskInspect : public Service {
+class TaskInspect final : public Service {
 public:
     // Override |p2pd:api::Service|
-    const char * method() noexcept final {
-        return "task.inspect";
-    }
+    const char * method() noexcept final;
     int Execute(
         json::Node const& params, json::Node & result
     ) final;
-
 };
 
 } // namespace service

@@ -50,20 +50,24 @@ public:
     void AsyncExecute(std::string request, callback cb);
 
     // Override |engine::Observer|
-    void OnTaskCreated(engine::TaskMetadata const& metadata) final;
-    void OnTaskMetadataReceived(engine::TaskMetadata const& metadata) final;
+    void OnTaskCreated(
+        engine::TaskMetadata const& metadata
+    ) const final;
+    void OnTaskMetadataReceived(
+        engine::TaskMetadata const& metadata
+    ) const final;
     void OnTaskStateChanged(
         std::string const& task_id, 
         engine::TaskSummary::State old_state,
         engine::TaskSummary::State new_state
-    ) final;
+    ) const final;
 
 private:
     void Register(Service * serv, engine_ptr const& engine);
     void DoExecute(std::string request, callback cb);
 
     template<typename T>
-    void DispatchEvent(const char * name, T const& data);
+    void DispatchEvent(const char * name, T const& data) const;
 
 };
 
