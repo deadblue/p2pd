@@ -1,4 +1,5 @@
-#include "api/service/add_task.h"
+#include "api/service/task_add.h"
+
 #include "json/io.h"
 #include "json/macro.h"
 #include "log/log.h"
@@ -7,15 +8,18 @@
 
 namespace p2pd {
 
+namespace {
+struct Params {
+    std::string type;
+    std::string uri;
+};
+} // namespace
+
 namespace json {
 
-DEFINE_UNMARSHALLER(api::service::AddTaskParams,
+DEFINE_UNMARSHALLER(Params,
     UNMARSHAL_FIELD(type)
     UNMARSHAL_FIELD(uri)
-)
-
-DEFINE_MARSHALLER(api::service::AddTaskResult,
-    MARSHAL_FIELD(task_id)
 )
 
 } // namespace json
@@ -23,9 +27,14 @@ DEFINE_MARSHALLER(api::service::AddTaskResult,
 namespace api {
 namespace service {
 
-int AddTask::Execute(json::Node const& params, json::Node & result) {
-    auto sp = params >> AddTaskParams();
-    auto ec = error_code{};
+const char * TaskAdd::method() noexcept {
+    static const char * method_name = "task.add";
+    return method_name;
+}
+
+int TaskAdd::Execute(json::Node const& params, json::Node & result) {
+    auto sp = params >> Params();
+    error_code ec;
     if(sp.type == "magnet") {
         AddMagnet(sp.uri, ec);
     } else if(sp.type == "torrent") {
@@ -34,7 +43,7 @@ int AddTask::Execute(json::Node const& params, json::Node & result) {
     return ec ? ec.value() : 0;
 }
 
-void AddTask::AddMagnet(std::string & uri, error_code & ec) {
+void TaskAdd::AddMagnet(std::string & uri, error_code & ec) {
     engine_->AddMagnet(uri.c_str(), ec);
     if(ec) {
         WLOG << "Add torrent task error("<< ec.value() 
@@ -42,7 +51,7 @@ void AddTask::AddMagnet(std::string & uri, error_code & ec) {
     }
 }
 
-void AddTask::AddTorrent(std::string & data, error_code & ec) {
+void TaskAdd::AddTorrent(std::string & data, error_code & ec) {
     size_t src_size = data.size();
     if(src_size % 4 != 0) {
         WLOG << "Invalid input data!";

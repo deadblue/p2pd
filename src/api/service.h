@@ -12,15 +12,14 @@ namespace api {
 class Service {
 
 protected:
-    using engine_ptr  = std::shared_ptr<p2pd::engine::Engine>;
-    engine_ptr engine_;
+    std::shared_ptr<p2pd::engine::Engine> engine_;
+    friend class Controller;
 
 public:
-    // Constructor
-    Service(engine_ptr engine): engine_(engine) {}
     // Destructor
     virtual ~Service() = default;
 
+    virtual const char * method() noexcept = 0;
     virtual int Execute(
         json::Node const& params, json::Node & result
     ) = 0;

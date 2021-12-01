@@ -1,82 +1,49 @@
-#ifndef P2PD_ENGINE_H
-#define P2PD_ENGINE_H
+#ifndef P2PD_ENGINE_ENGINE_H
+#define P2PD_ENGINE_ENGINE_H
 
-#include <memory>
-#include <vector>
-
-#include <libtorrent/extensions.hpp>
-#include <libtorrent/version.hpp>
-
-#include "options.h"
+#include "engine/error_code.h"
 #include "engine/observer.h"
-#include "engine/settings.h"
-#include "engine/task_host.h"
-
-namespace libtorrent {
-struct add_torrent_params;
-struct session;
-}
+#include "engine/type.h"
+#include "options.h"
 
 namespace p2pd {
 namespace engine {
 
-namespace lt = libtorrent;
-
-using error_code = lt::error_code;
-
-/**
- * @brief The core P2P download engine.
- * 
- * @author deadblue
- */
-class Engine :  public std::enable_shared_from_this<Engine>, 
-                public lt::plugin,
-                public TaskHost {
-
-private:
-#if LIBTORRENT_VERSION_MAJOR > 1
-    using client_data_type = lt::client_data_t;
-#else
-    using client_data_type = void *;
-#endif
-
-    lt::session * session_;
-    std::vector<Observer *> observers_{};
-
-    Settings settings_{};
-
+class Engine {
 public:
-    // Constructor
-    Engine();
     // Destructor
-    ~Engine();
+    virtual ~Engine() = default;;
 
-    // ----- Public API -----
-    void Startup(Options const& options);
-    void Shutdown();
-    void AddObserver(Observer * observer);
+    // APIs
+    inline void AddObserver(Observer * observer) noexcept {
+        observers_.push_back(observer);
+    }
+    virtual void Startup(Options const& options) = 0;
+    virtual void Shutdown() = 0;
+    
+    virtual void AddMagnet(const char * uri, error_code & ec) = 0;
+    virtual void AddTorrent(
+        const uint8_t * data, size_t data_size, error_code & ec
+    ) = 0;
+    virtual void ListTask(std::vector<TaskSummary> & summaries) = 0;
+    /**
+     * @brief Retrieve task metadata.
+     */
+    virtual void RetrieveTask(
+        std::string const& task_id, TaskMetadata & metadata, 
+        error_code & ec
+    ) = 0;
+    /**
+     * @brief Inspect task status
+     */
+    virtual void InspectTask(
+        std::string const& task_id, TaskStatus & status, 
+        error_code & ec
+    ) = 0;
+    // TODO: Add more APIs.
 
-    void AddMagnet(const char * uri, error_code & ec);
-    void AddTorrent(
-        const unsigned char * data, size_t data_size, error_code & ec
-    );
-    void ListTask();
-
-    // Override |libtorrent::plugin|
-    lt::feature_flags_t implemented_features() final;
-    std::shared_ptr<lt::torrent_plugin> new_torrent(
-        lt::torrent_handle const& handle, 
-        client_data_type client_data
-    ) final;
-    void on_alert(lt::alert const* alert) final;
-
-    // Override |TaskHost|
-    void OnTaskStateChanged(
-        uint32_t torrent_id, task_state state
-    ) final;
-
-private:
-    void AddTask(lt::add_torrent_params params, error_code & ec);
+protected:
+    std::vector<Observer *> observers_{};
 
 };
 
@@ -85,4 +52,4 @@ std::shared_ptr<Engine> create();
 } // namespace engine
 } // namespace p2pd
 
-#endif // P2PD_ENGINE_H
+#endif // P2PD_ENGINE_ENGINE_H

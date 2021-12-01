@@ -10,20 +10,33 @@ namespace p2pd {
 namespace engine {
 
 /**
- * Observer can receive download events from engine.
+ * @brief   Observer which receives events from engine.
+ * 
+ * @author  deadblue
  */
-class Observer{
+class Observer {
 
 public:
-    /**
-     * Fired when engine dispatch an alert.
-     */
-    virtual void OnEngineAlert(std::string const& message) {}
 
     /**
-     * Fired when state of a task is changed.
+     * @brief   Called when a new task is created in engine.
      */
-    virtual void OnTaskStateChanged(uint32_t task_id, TaskState state) {}
+    virtual void OnTaskCreated(TaskMetadata const& metadata) {}
+
+    /**
+     * @brief   Called when a task has received metadata from other nodes, only 
+     *          when a task is added without metadata (e.g. by magnet URI).
+     */
+    virtual void OnTaskMetadataReceived(TaskMetadata const& metadata) {}
+
+    /**
+     * @brief   Called when task state changed.
+     */
+    virtual void OnTaskStateChanged(
+        std::string const& task_id, 
+        TaskSummary::State old_state,
+        TaskSummary::State new_state
+    ) {}
 
     // TODO: Declare more observer methods.
     

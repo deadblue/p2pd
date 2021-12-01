@@ -7,23 +7,10 @@ namespace p2pd {
 namespace api {
 namespace service {
 
-struct AddTaskParams {
-    std::string type;
-    std::string uri;
-};
-
-struct AddTaskResult {
-    std::string task_id;
-};
-
-class AddTask: public Service {
-
+class TaskAdd final :   public Service {
 public:
-    AddTask(engine_ptr engine) : Service(engine) {}
-
-    static const char * method() {
-        return "task.add";
-    }
+    // Override |p2pd:api::Service|
+    const char * method() noexcept final;
     int Execute(
         json::Node const& params, json::Node & result
     ) final;

@@ -19,7 +19,7 @@ class Engine;
 
 namespace api {
 
-using engine_ptr = std::shared_ptr<p2pd::engine::Engine>;
+class Service;
 
 /**
  * @brief   Controler is the brain of API server. It receives requests from 
@@ -28,21 +28,21 @@ using engine_ptr = std::shared_ptr<p2pd::engine::Engine>;
  * 
  * @author  deadblue
  */
-class Controller : public engine::Observer {
+class Controller final : public engine::Observer {
 
 private:
-    using callback    = std::function<void(std::string)>;
-    using executor    = boost::asio::thread_pool;
+    using engine_ptr  = std::shared_ptr<engine::Engine>;
     using service_ptr = std::unique_ptr<Service>;
+    using callback = std::function<void(std::string)>;
+    using executor = boost::asio::thread_pool;
 
-    engine_ptr engine_;
     callback event_cb_;
     executor executor_{};
     std::map<std::string, service_ptr> services_{};
 
 public:
     // Constructor
-    Controller(engine_ptr engine, callback event_cb);
+    Controller(engine_ptr const& engine, callback event_cb);
     // Destructor
     ~Controller() = default;
 
@@ -50,10 +50,16 @@ public:
     void AsyncExecute(std::string request, callback cb);
 
     // Override |engine::Observer|
-    void OnEngineAlert(std::string const& message) final;
-    void OnTaskStateChanged(uint32_t task_id, engine::TaskState state) final;
+    void OnTaskCreated(engine::TaskMetadata const& metadata) final;
+    void OnTaskMetadataReceived(engine::TaskMetadata const& metadata) final;
+    void OnTaskStateChanged(
+        std::string const& task_id, 
+        engine::TaskSummary::State old_state,
+        engine::TaskSummary::State new_state
+    ) final;
 
 private:
+    void Register(Service * serv, engine_ptr const& engine);
     void DoExecute(std::string request, callback cb);
 
     template<typename T>

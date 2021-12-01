@@ -51,8 +51,9 @@ int Daemon::Run() {
 
     // Start server
     auto server = api::create_server(engine);
-    server->Startup("0.0.0.0", options_.api_port);
-    LOG << "Server listening at 0.0.0.0:" << options_.api_port << "...";
+    server->Startup(options_.api_addr.c_str(), options_.api_port);
+    LOG << "Server listening at " << options_.api_addr 
+        << ":" << options_.api_port << " ...";
 
     // Waiting for signal handler exit.
     io_ctx.run();

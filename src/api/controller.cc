@@ -1,8 +1,12 @@
 #include "api/controller.h"
 
 #include "api/error.h"
+#include "api/event.h"
 #include "api/message.h"
-#include "api/service/add_task.h"
+#include "api/service/engine_version.h"
+#include "api/service/task_add.h"
+#include "api/service/task_inspect.h"
+#include "api/service/task_list.h"
 #include "engine/engine.h"
 #include "json/io.h"
 #include "log/log.h"
@@ -11,16 +15,15 @@ namespace p2pd {
 namespace api {
 
 Controller::Controller(
-    engine_ptr engine, callback event_cb
-) : engine_(engine), 
-    event_cb_(std::move(event_cb)) {
+    engine_ptr const& engine, callback event_cb
+) : event_cb_(std::move(event_cb)) {
     // Register self as observer to engine.
-    engine_->AddObserver(this);
+    engine->AddObserver(this);
     // Register services.
-    services_.emplace(
-        service::AddTask::method(), 
-        new service::AddTask(engine)
-    );
+    Register(new service::EngineVersion(), engine);
+    Register(new service::TaskAdd(), engine);
+    Register(new service::TaskList(), engine);
+    Register(new service::TaskInspect(), engine);
 }
 
 void Controller::AsyncExecute(std::string request, callback cb) {
@@ -31,20 +34,36 @@ void Controller::AsyncExecute(std::string request, callback cb) {
 
 // ----- Override |engine::Observer| -----
 
-void Controller::OnEngineAlert(std::string const& message) {
-    // auto data = event::EngineAlert();
-    // data.message = message;
-    // DispatchEvent("engine.alert", data);
+void Controller::OnTaskCreated(engine::TaskMetadata const& metadata) {
+    static const char * event_name = "task.created";
+    DispatchEvent(event_name, metadata);
 }
 
-void Controller::OnTaskStateChanged(uint32_t task_id, engine::TaskState state) {
-    // auto data = event::TaskStateChanged();
-    // data.task_id = task_id;
-    // data.state = static_cast<int>(state);
-    // DispatchEvent("task.state_changed", data);
+void Controller::OnTaskMetadataReceived(engine::TaskMetadata const& metadata) {
+    static const char * event_name = "task.metadata.received";
+    DispatchEvent(event_name, metadata);
+}
+
+void Controller::OnTaskStateChanged(
+    std::string const& task_id, 
+    engine::TaskSummary::State old_state,
+    engine::TaskSummary::State new_state
+) {
+    static const char * event_name = "task.state.updated";
+    event::TaskStateUpdated event{
+        task_id, 
+        static_cast<int>(old_state), 
+        static_cast<int>(new_state)
+    };
+    DispatchEvent(event_name, event);
 }
 
 // ----- Private methods -----
+
+void Controller::Register(Service * serv, engine_ptr const& engine) {
+    serv->engine_ = engine;
+    services_.emplace(serv->method(), serv);
+}
 
 void Controller::DoExecute(std::string request, callback cb) {
     DLOG << "Receive request: " << request;
