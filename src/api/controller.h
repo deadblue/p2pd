@@ -25,7 +25,6 @@ class Service;
  * @brief   Controler is the brain of API server. It receives requests from 
  *          server, performs them in engine, and send response to server. It
  *          also receives event from engine, and publish to server.
- * 
  * @author  deadblue
  */
 class Controller final : public engine::Observer {
@@ -36,6 +35,7 @@ private:
     using callback = std::function<void(std::string)>;
     using executor = boost::asio::thread_pool;
 
+    engine_ptr engine_;
     callback event_cb_;
     executor executor_{};
     std::map<std::string, service_ptr> services_{};
@@ -44,7 +44,7 @@ public:
     // Constructor
     Controller(engine_ptr const& engine, callback event_cb);
     // Destructor
-    ~Controller() = default;
+    ~Controller();
 
     // Execute request asynchronously.
     void AsyncExecute(std::string request, callback cb);

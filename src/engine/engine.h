@@ -1,6 +1,9 @@
 #ifndef P2PD_ENGINE_ENGINE_H
 #define P2PD_ENGINE_ENGINE_H
 
+#include <cstdint>
+#include <map>
+
 #include "engine/error_code.h"
 #include "engine/observer.h"
 #include "engine/type.h"
@@ -14,10 +17,20 @@ public:
     // Destructor
     virtual ~Engine() = default;;
 
-    // APIs
-    inline void AddObserver(Observer * observer) noexcept {
-        observers_.push_back(observer);
+    void AddObserver(Observer * ob) noexcept {
+        uintptr_t key = reinterpret_cast<uintptr_t>(ob);
+        if(observers_.count(key) > 0) {
+            observers_.emplace(key, ob);
+        }
     }
+    void RemoveObserver(Observer * ob) noexcept {
+        uintptr_t key = reinterpret_cast<uintptr_t>(ob);
+        if(observers_.count(key) > 0) {
+            observers_.erase(key);
+        }
+    }
+
+    // APIs
     virtual void Startup(Options const& options) = 0;
     virtual void Shutdown() = 0;
     
@@ -43,7 +56,7 @@ public:
     // TODO: Add more APIs.
 
 protected:
-    std::vector<Observer *> observers_{};
+    std::map<uintptr_t, Observer *> observers_{};
 
 };
 

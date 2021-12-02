@@ -232,8 +232,8 @@ void EngineImpl::on_alert(lt::alert const* alert) {
             auto * p = lt::alert_cast<lt::add_torrent_alert>(alert);
             TaskMetadata metadata;
             if(fill_task_metadata(p->handle, metadata)) {
-                for(auto const* ob : observers_) {
-                    ob->OnTaskCreated(metadata);
+                for(auto const& entry : observers_) {
+                    entry.second->OnTaskCreated(metadata);
                 }
             }
         }
@@ -243,8 +243,8 @@ void EngineImpl::on_alert(lt::alert const* alert) {
             auto * p = lt::alert_cast<lt::metadata_received_alert>(alert);
             TaskMetadata metadata;
             if(fill_task_metadata(p->handle, metadata)) {
-                for(auto const* ob : observers_) {
-                    ob->OnTaskMetadataReceived(metadata);
+                for(auto const& entry : observers_) {
+                    entry.second->OnTaskMetadataReceived(metadata);
                 }
             }
         }
@@ -256,8 +256,10 @@ void EngineImpl::on_alert(lt::alert const* alert) {
             if(encode_hash(p->handle.info_hash(), task_id)) {
                 auto old_state = convert_state(p->prev_state);
                 auto new_state = convert_state(p->state);
-                for(auto const* ob : observers_) {
-                    ob->OnTaskStateChanged(task_id, old_state, new_state);
+                for(auto const& entry : observers_) {
+                    entry.second->OnTaskStateChanged(
+                        task_id, old_state, new_state
+                    );
                 }
             }
         }

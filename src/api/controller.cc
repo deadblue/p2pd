@@ -16,14 +16,19 @@ namespace api {
 
 Controller::Controller(
     engine_ptr const& engine, callback event_cb
-) : event_cb_(std::move(event_cb)) {
+) : engine_(engine), event_cb_(std::move(event_cb)) {
     // Register self as observer to engine.
-    engine->AddObserver(this);
+    engine_->AddObserver(this);
     // Register services.
-    Register(new service::EngineVersion(), engine);
-    Register(new service::TaskAdd(), engine);
-    Register(new service::TaskList(), engine);
-    Register(new service::TaskInspect(), engine);
+    Register(new service::EngineVersion(), engine_);
+    Register(new service::TaskAdd(), engine_);
+    Register(new service::TaskList(), engine_);
+    Register(new service::TaskInspect(), engine_);
+}
+
+Controller::~Controller() {
+    engine_->RemoveObserver(this);
+    DLOG << "Controller released";
 }
 
 void Controller::AsyncExecute(std::string request, callback cb) {
