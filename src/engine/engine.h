@@ -19,7 +19,7 @@ public:
 
     void AddObserver(Observer * ob) noexcept {
         uintptr_t key = reinterpret_cast<uintptr_t>(ob);
-        if(observers_.count(key) > 0) {
+        if(observers_.count(key) == 0) {
             observers_.emplace(key, ob);
         }
     }
