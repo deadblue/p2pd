@@ -1,6 +1,7 @@
 #ifndef P2PD_API_CONTROLLER_H
 #define P2PD_API_CONTROLLER_H
 
+#include <atomic>
 #include <functional>
 #include <map>
 #include <memory>
@@ -23,8 +24,9 @@ class Service;
 
 /**
  * @brief   Controler is the brain of API server. It receives requests from 
- *          server, performs them in engine, and send response to server. It
- *          also receives event from engine, and publish to server.
+ *          server, performs them in engine, then send response to server. It
+ *          also receives events from engine, and transfer them to server.
+ * 
  * @author  deadblue
  */
 class Controller final : public engine::Observer {
@@ -37,7 +39,10 @@ private:
 
     engine_ptr engine_;
     callback event_cb_;
+
     executor executor_{};
+    std::atomic_bool stop_{false};
+
     std::map<std::string, service_ptr> services_{};
 
 public:
@@ -48,6 +53,7 @@ public:
 
     // Execute request asynchronously.
     void AsyncExecute(std::string request, callback cb);
+    void Stop();
 
     // Override |engine::Observer|
     void OnTaskCreated(

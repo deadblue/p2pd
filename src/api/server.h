@@ -23,11 +23,11 @@ class Session;
 using engine_ptr = std::shared_ptr<engine::Engine>;
 
 /**
- * @brief Server only does the underlying message transmission.
+ * @brief   Server only does the underlying message transmission.
  * 
- * @author deadblue
+ * @author  deadblue
  */
-class Server :  public SessionHost {
+class Server : public SessionHost {
 
 private:
     using controller_ptr = std::unique_ptr<Controller>;
@@ -54,7 +54,7 @@ public:
     void Startup(const char * ip, uint16_t port);
     void Shutdown();
 
-    // Override |p2pd::api::server::SessionHost|
+    // Override |p2pd::api::SessionHost|
     void OnSessionMessage(
             session_id id, std::string message) final;
     void OnSessionClose(

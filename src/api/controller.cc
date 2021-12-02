@@ -27,14 +27,24 @@ Controller::Controller(
 }
 
 Controller::~Controller() {
-    engine_->RemoveObserver(this);
     DLOG << "Controller released";
 }
 
 void Controller::AsyncExecute(std::string request, callback cb) {
+    if(stop_) { return; }
     boost::asio::post(executor_, std::bind(
         &Controller::DoExecute, this, std::move(request), cb
     ));
+}
+
+void Controller::Stop() {
+    if(stop_.exchange(true)) { return; }
+    // FIXME: A more graceful way is to remove all pending jobs and wait all 
+    // running jobs, but |asio::thread_pool| doesn't support that :(
+    // Currently, simply interrupt all threads.
+    executor_.stop();
+    // Unregister observer from engine.
+    engine_->RemoveObserver(this);
 }
 
 // ----- Override |engine::Observer| -----

@@ -58,6 +58,10 @@ void Server::Shutdown() {
     error_code ec;
     acceptor_.cancel(ec);
     acceptor_.close(ec);
+
+    // Stop controller, it won't execute any requests after stopped.
+    ctrl_->Stop();
+
     // Close all still-alive sessions.
     if(sessions_.size() > 0) {
         LOG << "Closing alive sessions ...";
