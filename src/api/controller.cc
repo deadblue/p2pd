@@ -5,7 +5,8 @@
 #include "api/message.h"
 #include "api/service/engine_version.h"
 #include "api/service/task_add.h"
-#include "api/service/task_inspect.h"
+#include "api/service/task_get_metadata.h"
+#include "api/service/task_get_status.h"
 #include "api/service/task_list.h"
 #include "engine/engine.h"
 #include "json/io.h"
@@ -20,10 +21,11 @@ Controller::Controller(
     // Register self as observer to engine.
     engine_->AddObserver(this);
     // Register services.
-    Register(new service::EngineVersion(), engine_);
-    Register(new service::TaskAdd(), engine_);
-    Register(new service::TaskList(), engine_);
-    Register(new service::TaskInspect(), engine_);
+    Register(new service::EngineVersion());
+    Register(new service::TaskAdd());
+    Register(new service::TaskList());
+    Register(new service::TaskGetMetadata());
+    Register(new service::TaskGetStatus());
 }
 
 Controller::~Controller() {
@@ -79,8 +81,8 @@ void Controller::OnTaskStateChanged(
 
 // ----- Private methods -----
 
-void Controller::Register(Service * serv, engine_ptr const& engine) {
-    serv->engine_ = engine;
+void Controller::Register(Service * serv) {
+    serv->engine_ = engine_;
     services_.emplace(serv->method(), serv);
 }
 

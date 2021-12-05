@@ -1,19 +1,18 @@
-#include "api/service/task_inspect.h"
+#include "api/service/task_get_metadata.h"
 
-#include "engine/error_code.h"
 #include "engine/type.h"
 #include "json/macro.h"
 
 namespace p2pd {
 
 namespace {
-struct TaskInspectParams {
+struct Params {
     std::string task_id;
 };
 } // namespace
 
 namespace json {
-DEFINE_UNMARSHALLER(TaskInspectParams,
+DEFINE_UNMARSHALLER(Params,
     UNMARSHAL_FIELD(task_id)
 )
 } // namespace json
@@ -21,22 +20,23 @@ DEFINE_UNMARSHALLER(TaskInspectParams,
 namespace api {
 namespace service {
 
-const char * TaskInspect::method() noexcept {
-    return "task.inspect";
+const char * TaskGetMetadata::method() noexcept {
+    return "task.getMetadata";
 }
 
-int TaskInspect::Execute(
+int TaskGetMetadata::Execute(
     json::Node const& params, json::Node & result
 ) {
-    auto p = params >> TaskInspectParams();
+    auto p = params >> Params();
 
     engine::error_code ec;
-    engine::TaskStatus status;
-    engine_->InspectTask(p.task_id, status, ec);
+    engine::TaskMetadata metadata;
+    engine_->RetrieveTask(p.task_id, metadata, ec);
+
     if(ec) {
         return ec.value();
     } else {
-        result << status;
+        result << metadata;
         return 0;
     }
 }

@@ -9,6 +9,8 @@
 namespace p2pd {
 namespace api {
 
+// TODO: Is it possible to use template here? e.g.:
+// template<typename _param, typename _result>
 class Service {
 
 protected:

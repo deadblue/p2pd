@@ -69,7 +69,7 @@ public:
     ) const final;
 
 private:
-    void Register(Service * serv, engine_ptr const& engine);
+    void Register(Service * serv);
     void DoExecute(std::string request, callback cb);
 
     template<typename T>
