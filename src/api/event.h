@@ -8,14 +8,14 @@ namespace api {
 namespace event {
 
 struct TaskStateUpdated {
-    std::string task_id;
+    std::string id;
     int old_state;
     int new_state;
 
     TaskStateUpdated() = default;
     TaskStateUpdated(
-        std::string task_id, int old_state, int new_state
-    ) : task_id(std::move(task_id)), 
+        std::string id, int old_state, int new_state
+    ) : id(std::move(id)), 
         old_state(old_state), 
         new_state(new_state) {}
 };

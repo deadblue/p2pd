@@ -191,7 +191,7 @@ void EngineImpl::InspectTask(
     );
     if(!s.has_metadata) { return; }
     for(auto piece : s.pieces) {
-        status.pieces.push_back(piece ? 1 : 0);
+        status.pieces.push_back(piece);
     }
 
     // Inspect peers state

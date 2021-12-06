@@ -86,6 +86,9 @@ struct TaskSummary {
  */
 struct TaskStatus {
 
+    /**
+     * @brief Peer information.
+     */
     struct Peer {
         // Client name
         std::string client;
@@ -101,9 +104,9 @@ struct TaskStatus {
         uint64_t ul_speed;
     };
 
-    // Pieces status
-    std::vector<int> pieces;
-    // Files progress
+    // Pieces complete state
+    std::vector<bool> pieces;
+    // Files downloaded bytes
     std::vector<uint64_t> files;
     // Peers status.
     std::vector<Peer> peers;

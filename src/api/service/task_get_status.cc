@@ -8,13 +8,13 @@ namespace p2pd {
 
 namespace {
 struct TaskInspectParams {
-    std::string task_id;
+    std::string id;
 };
 } // namespace
 
 namespace json {
 DEFINE_UNMARSHALLER(TaskInspectParams,
-    UNMARSHAL_FIELD(task_id)
+    UNMARSHAL_FIELD(id)
 )
 } // namespace json
 
@@ -32,7 +32,7 @@ int TaskGetStatus::Execute(
 
     engine::error_code ec;
     engine::TaskStatus status;
-    engine_->InspectTask(p.task_id, status, ec);
+    engine_->InspectTask(p.id, status, ec);
     if(ec) {
         return ec.value();
     } else {

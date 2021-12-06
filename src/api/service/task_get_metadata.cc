@@ -7,13 +7,13 @@ namespace p2pd {
 
 namespace {
 struct Params {
-    std::string task_id;
+    std::string id;
 };
 } // namespace
 
 namespace json {
 DEFINE_UNMARSHALLER(Params,
-    UNMARSHAL_FIELD(task_id)
+    UNMARSHAL_FIELD(id)
 )
 } // namespace json
 
@@ -31,7 +31,7 @@ int TaskGetMetadata::Execute(
 
     engine::error_code ec;
     engine::TaskMetadata metadata;
-    engine_->RetrieveTask(p.task_id, metadata, ec);
+    engine_->RetrieveTask(p.id, metadata, ec);
 
     if(ec) {
         return ec.value();

@@ -109,7 +109,7 @@ so all clients will be informed at the same time.
 
 | Field           | Data Type | Comment                          |
 |-----------------|-----------|----------------------------------|
-| id              | `string`  | Unique task ID.                  |
+| id              | `string`  | Task ID.                         |
 | name            | `string`  | Task name.                       |
 | state           | `integer` | Task state.                      |
 | total_bytes     | `integer` | Total bytes to download.         |
@@ -128,17 +128,17 @@ so all clients will be informed at the same time.
 
 **params:**
 
-| Field   | Data Type | Comment  |
-|---------|-----------|----------|
-| task_id | `string`  | Task ID. |
+| Field | Data Type | Comment  |
+|-------|-----------|----------|
+| id    | `string`  | Task ID. |
 
 **result:**
 
-| Field   | Data Type        | Comment                          |
-|---------|------------------|----------------------------------|
-| pieces  | `array<bool>`    | Unique task ID.                  |
-| files   | `array<integer>` | Task name.                       |
-| peers   | `array<Peer>`    | Total size of all files in task. |
+| Field  | Data Type        | Comment                    |
+|--------|------------------|----------------------------|
+| pieces | `array<boolean>` | Complete flag of pieces.   |
+| files  | `array<integer>` | Downloaded bytes of files. |
+| peers  | `array<Peer>`    | Peer list.                 |
 
 `Peer` structure:
 
@@ -159,9 +159,9 @@ so all clients will be informed at the same time.
 
 **params:**
 
-| Field   | Data Type | Comment  |
-|---------|-----------|----------|
-| task_id | `string`  | Task ID. |
+| Field | Data Type | Comment  |
+|-------|-----------|----------|
+| id    | `string`  | Task ID. |
 
 **result:**
 
@@ -225,6 +225,6 @@ so all clients will be informed at the same time.
 
 | Field     | Data Type | Comment                |
 |-----------|-----------|------------------------|
-| task_id   | `string`  | Task ID.               |
+| id        | `string`  | Task ID.               |
 | old_state | `integer` | Torrent name.          |
 | new_state | `integer` | Torrent creator.       |

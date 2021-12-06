@@ -33,14 +33,14 @@ std::vector<T> & operator>>=(std::vector<T> & to, Node const& from) {
 // ----- Vector marshallers -----
 template<typename T>
 Node & operator<<=(Node & to, std::vector<T> const& from) {
-    for(auto const& item : from) {
+    for(T const& item : from) {
         to.Append(Node() << item);
     }
     return to;
 }
 template<typename T>
 Node & operator<<=(Node && to, std::vector<T> const& from) {
-    for(auto const& item : from) {
+    for(T const& item : from) {
         to.Append(Node() << item);
     }
     return to;
