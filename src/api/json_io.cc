@@ -1,9 +1,39 @@
+#include "api/event.h"
+#include "api/message.h"
 #include "engine/type.h"
-
 #include "json/macro.h"
 
 namespace p2pd {
 namespace json {
+
+// ----- types in api/message.h -----
+
+DEFINE_UNMARSHALLER(p2pd::api::Request,
+    UNMARSHAL_FIELD(id)
+    UNMARSHAL_FIELD(method)
+    UNMARSHAL_FIELD(params)
+)
+
+DEFINE_MARSHALLER(p2pd::api::Response,
+    MARSHAL_FIELD(id)
+    MARSHAL_FIELD(error)
+    MARSHAL_FIELD(result)
+)
+
+DEFINE_MARSHALLER(p2pd::api::Event,
+    MARSHAL_FIELD(name)
+    MARSHAL_FIELD(data)
+)
+
+// ----- types in api/event.h -----
+
+DEFINE_MARSHALLER(p2pd::api::event::TaskStateUpdated,
+    MARSHAL_FIELD(id)
+    MARSHAL_FIELD(old_state)
+    MARSHAL_FIELD(new_state)
+)
+
+// ----- types in engine/type.h -----
 
 DEFINE_MARSHALLER(p2pd::engine::TaskMetadata::File,
     MARSHAL_FIELD(path)
