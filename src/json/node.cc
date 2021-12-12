@@ -11,6 +11,7 @@ namespace json {
 #if JSON_C_VERSION_NUM < JSON_C_VERSION_MAKER(0, 14, 0)
 #define json_object_new_uint64 json_object_new_int64
 #define json_object_get_uint64 json_object_get_int64
+#define json_object_set_uint64 json_object_set_int64
 #endif
 
 static const char * EMPTY_STRING = "";

@@ -6,6 +6,7 @@
 #include <map>
 #include <memory>
 
+#include "api/controller.h"
 #include "api/server/session_host.h"
 #include "api/server/type.h"
 
@@ -17,7 +18,6 @@ class Engine;
 
 namespace api {
 
-class Controller;
 class Session;
 
 using engine_ptr = std::shared_ptr<engine::Engine>;

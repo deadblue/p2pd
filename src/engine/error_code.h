@@ -2,7 +2,6 @@
 #define P2PD_ENGINE_ERROR_H
 
 #include <boost/system/error_code.hpp>
-#include <boost/system/is_error_code_enum.hpp>
 
 namespace p2pd {
 namespace engine {

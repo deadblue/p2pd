@@ -1,7 +1,5 @@
 #include "engine/error_code.h"
 
-#include <boost/system/error_category.hpp>
-
 namespace p2pd {
 namespace engine {
 
