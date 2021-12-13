@@ -80,9 +80,7 @@ void Server::Shutdown() {
 
 // ----- Override |p2pd::api::server::SessionHost| -----
 
-void Server::OnSessionMessage(
-    session_id id, std::string message
-) {
+void Server::OnSessionMessage(session_id id, std::string message) {
     ctrl_->AsyncExecute(std::move(message), std::bind(
         &Server::PushMessage, 
         this, id, std::placeholders::_1
@@ -132,7 +130,7 @@ void Server::PushMessage(session_id id, std::string message) {
         return;
     }
     auto & session = sessions_[id];
-    session->SendMessage(message);
+    session->SendMessage(std::move(message));
 }
 
 void Server::BroadcastMessage(std::string message) {

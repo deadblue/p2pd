@@ -1,11 +1,11 @@
 #include "api/server/session.h"
 
+#include <boost/beast/core/ostream.hpp>
+
 #include "log/log.h"
 
 namespace p2pd {
 namespace api {
-
-using auto_lock = std::lock_guard<std::mutex>;
 
 Session::Session(
     io_context & io_ctx, socket s, SessionHost * host
@@ -36,22 +36,12 @@ void Session::Close() {
     )));
 }
 
-void Session::SendMessage(std::string const& message) {
+void Session::SendMessage(std::string message) {
     if(message.empty()) { return; }
-    // Lock the write operation
-    auto_lock lock{w_mutex_};
-    // Put message to write buffer
-    auto * data = message.c_str();
-    auto data_size = message.size();
-    auto bufs = w_buf_.prepare(data_size);
-    for(auto const& buf : bufs) {
-        memcpy(buf.data(), data, buf.size());
-        data += buf.size();
-    }
     // Enqueueu writing task
     asio::post(w_strand_, std::bind(
         &Session::DoWrite, 
-        shared_from_this(), data_size
+        shared_from_this(), std::move(message)
     ));
 }
 
@@ -93,31 +83,37 @@ void Session::OnRead(error_code const& ec, size_t transferred_size) {
     // Handle incoming message
     if(stream_.got_text()) {
         auto message = boost::beast::buffers_to_string(r_buf_.data());
-        host_->OnSessionMessage(id_, message);
+        host_->OnSessionMessage(id_, std::move(message));
     }
     r_buf_.consume(transferred_size);
     // Read next message
     AsyncRead();
 }
 
-void Session::DoWrite(size_t data_size) {
-    // Moving data from output buffer to input buffer
-    w_buf_.commit(data_size);
+void Session::DoWrite(std::string message) {
+    size_t msg_size = message.length();
+    // Prepare buffer.
+    buffer write_buf{};
+    beast::ostream(write_buf) << message << std::flush;
+    if(write_buf.size() != msg_size) {
+        WLOG << "Incomplete buffer size: " 
+            << write_buf.size() << "!=" << msg_size;
+    }
     // Send text data
     stream_.text(true);
     error_code ec;
-    auto written_size = stream_.write(w_buf_.data(), ec);
+    auto written_size = stream_.write(write_buf.data(), ec);
     // Error handling
     if(ec) {
         // TODO: Retry on error?
         WLOG << "Write data error(" << ec.value()
             << "): " << ec.message();
-    } else if(written_size != data_size) {
+    } else if(written_size != msg_size) {
         // TODO: Retry for incomplete transmission?
         WLOG << "Incomplete writting: " 
-            << written_size << "!=" << data_size;
+            << written_size << "!=" << msg_size;
     }
-    w_buf_.consume(w_buf_.size());
+    write_buf.consume(msg_size);
 }
 
 } // namespace api

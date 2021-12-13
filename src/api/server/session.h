@@ -3,7 +3,6 @@
 
 #include <atomic>
 #include <memory>
-#include <mutex>
 #include <string>
 
 #include <boost/asio.hpp>
@@ -32,15 +31,11 @@ private:
     SessionHost * host_;
     // Executor for reading operations.
     strand r_strand_;
-    // Executor for writing operations.
-    strand w_strand_;
     // Buffer for reading.
     buffer r_buf_{};
-    // Buffer for writing
-    buffer w_buf_{};
-    // Lock for writting
-    std::mutex w_mutex_{};
-
+    // Executor for writing operations.
+    strand w_strand_;
+    // Close flag.
     std::atomic_bool closed_{false};
 
 public:
@@ -51,12 +46,19 @@ public:
 
     // Retrieve session id.
     session_id const& id() const { return id_; }
-    // Open the session.
+    /**
+     * @brief Start handshake with client.
+     */
     void Open();
-    // Close the session, send close message to client.
+    /**
+     * @brief Close session from server side.
+     */
     void Close();
-    // Send message to client.
-    void SendMessage(std::string const& message);
+    /**
+     * @brief Asynchronously send message to client.
+     * @param message Message to send.
+     */
+    void SendMessage(std::string message);
 
 private:
     // Callback function when handshake is done.
@@ -68,7 +70,7 @@ private:
     // Callback function when receive data from remote.
     void OnRead(error_code const& ec, size_t transferred_size);
     // Write text data to remote.
-    void DoWrite(size_t data_size);
+    void DoWrite(std::string message);
 
 };
 
