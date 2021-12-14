@@ -6,7 +6,6 @@
 #include <map>
 #include <memory>
 
-#include "api/controller.h"
 #include "api/server/session_host.h"
 #include "api/server/type.h"
 
@@ -19,6 +18,7 @@ class Engine;
 namespace api {
 
 class Session;
+class Controller;
 
 using engine_ptr = std::shared_ptr<engine::Engine>;
 
@@ -42,11 +42,11 @@ private:
     // Waiter for shutdown job.
     std::condition_variable cond_{};
     // API Controller
-    controller_ptr ctrl_{};
+    controller_ptr ctrl_;
 
 public:
     // Constructor
-    explicit Server(engine_ptr engine);
+    explicit Server(engine_ptr const& engine);
     // Destructor
     ~Server();
 
@@ -77,7 +77,7 @@ private:
 
 };
 
-std::unique_ptr<Server> create_server(engine_ptr engine);
+std::unique_ptr<Server> create_server(engine_ptr const& engine);
 
 } // namespace api
 } // namespace p2pd

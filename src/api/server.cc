@@ -10,13 +10,13 @@
 namespace p2pd {
 namespace api {
 
-Server::Server(engine_ptr engine) 
-    :   io_ctx_(std::thread::hardware_concurrency()), 
-        acceptor_(io_ctx_) {
+Server::Server(engine_ptr const& engine) 
+    : io_ctx_(std::thread::hardware_concurrency()), 
+      acceptor_(io_ctx_) {
     // Create controller
-    ctrl_.reset(new Controller(engine, std::bind(
+    ctrl_ = std::make_unique<Controller>(engine, std::bind(
         &Server::BroadcastMessage, this, std::placeholders::_1
-    )));
+    ));
 }
 
 Server::~Server() {
@@ -139,7 +139,7 @@ void Server::BroadcastMessage(std::string message) {
     }
 }
 
-std::unique_ptr<Server> create_server(engine_ptr engine) {
+std::unique_ptr<Server> create_server(engine_ptr const& engine) {
     return std::make_unique<Server>(engine);
 }
 
